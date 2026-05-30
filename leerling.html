@@ -368,11 +368,11 @@ function genA(){
     const b=opl+a;
     const verg=a>=0?`${letter} + ${a} = ${b}`:`${letter} − ${Math.abs(a)} = ${b}`;
     const stap1=a>=0
-      ?stapRij(termHTML(new Br(1),letter,{eerst:true})+termHTML(new Br(a),null)+`<span class="markeer"> − ${a}</span>`,`${b}<span class="markeer"> − ${a}</span>`,'Trek '+a+' af van beide kanten')
-      :stapRij(termHTML(new Br(1),letter,{eerst:true})+termHTML(new Br(a),null)+`<span class="markeer"> + ${Math.abs(a)}</span>`,`${b}<span class="markeer"> + ${Math.abs(a)}</span>`,'Tel '+Math.abs(a)+' op bij beide kanten');
+      ?stapRij(termHTML(new Br(1),letter,{eerst:true})+termHTML(new Br(a),null)+`<span class="markeer"> − ${a}</span>`,`${b}<span class="markeer"> − ${a}</span>`,'Werk de termen zonder onbekende weg uit het andere lid.')
+      :stapRij(termHTML(new Br(1),letter,{eerst:true})+termHTML(new Br(a),null)+`<span class="markeer"> + ${Math.abs(a)}</span>`,`${b}<span class="markeer"> + ${Math.abs(a)}</span>`,'Werk de termen zonder onbekende weg uit het andere lid.');
     const uitw=stapRij(termHTML(new Br(1),letter,{eerst:true})+termHTML(new Br(a)),''+b)
       +stap1
-      +stapRij('<i>'+letter+'</i>',''+opl,'Oplossing');
+      +stapRij('<i>'+letter+'</i>',''+opl,'Herleid.');
     return{verg,opl:new Br(opl),letter,uitw};
   }
   if(type==='type2'){
@@ -381,8 +381,8 @@ function genA(){
     const b=a*opl;
     const verg=`${a}<i>${letter}</i> = ${b}`;
     const uitw=stapRij(`${a}<i>${letter}</i>`,''+b)
-      +stapRij(`${a}<i>${letter}</i><span class="markeer"> : ${a}</span>`,`${b}<span class="markeer"> : ${a}</span>`,'Deel beide kanten door '+a)
-      +stapRij('<i>'+letter+'</i>',''+opl,'Oplossing');
+      +stapRij(`${a}<i>${letter}</i><span class="markeer"> : ${a}</span>`,`${b}<span class="markeer"> : ${a}</span>`,'Werk de factor weg.')
+      +stapRij('<i>'+letter+'</i>',''+opl,'Herleid.');
     return{verg,opl:new Br(opl),letter,uitw};
   }
   // type3: ax+b=cx+d
@@ -401,11 +401,11 @@ function genA(){
     const stap1=stapRij(
       lH+`<span class="markeer">${c>0?' − '+c+'<i>'+letter+'</i>':' + '+Math.abs(c)+'<i>'+letter+'</i>'}</span>`+`<span class="markeer">${b>0?' − '+b:' + '+Math.abs(b)}</span>`,
       rH+`<span class="markeer">${c>0?' − '+c+'<i>'+letter+'</i>':' + '+Math.abs(c)+'<i>'+letter+'</i>'}</span>`+`<span class="markeer">${b>0?' − '+b:' + '+Math.abs(b)}</span>`,
-      'Breng x-termen links, getallen rechts'
+      'Werk de termen met een onbekende weg uit het ene lid. Werk de termen zonder onbekende weg uit het andere lid.'
     );
-    const stap2=stapRij(lidHTML(nLo,new Br(0),letter),brHTML(nRg),'Vereenvoudig');
-    const stap3=stapRij(lidHTML(nLo,new Br(0),letter)+`<span class="markeer"> : ${nLo.t}</span>`,brHTML(nRg)+`<span class="markeer"> : ${nLo.t}</span>`,'Deel door '+nLo.t);
-    const stap4=stapRij('<i>'+letter+'</i>',brHTML(new Br(opl)),'Oplossing');
+    const stap2=stapRij(lidHTML(nLo,new Br(0),letter),brHTML(nRg),'Herleid beide leden.');
+    const stap3=stapRij(lidHTML(nLo,new Br(0),letter)+`<span class="markeer"> : ${nLo.t}</span>`,brHTML(nRg)+`<span class="markeer"> : ${nLo.t}</span>`,'Werk de factor weg.');
+    const stap4=stapRij('<i>'+letter+'</i>',brHTML(new Br(opl)),'Herleid.');
     const uitw=stapRij(lH,rH)+stap1+stap2+stap3+stap4;
     return{verg:lH+' = '+rH,opl:new Br(opl),letter,uitw};
   }
@@ -432,10 +432,10 @@ function genB(){
     const ll=new Br(a),lg=new Br(b),rl=new Br(c),rg=new Br(d);
     const nLo=ll.min(rl),nRg=rg.min(lg);
     const lH=lidHTML(ll,lg,letter),rH=lidHTML(rl,rg,letter);
-    const stap1=stapRij(lH+'<span class="markeer">'+( c>0?' − '+c+'<i>'+letter+'</i>':' + '+Math.abs(c)+'<i>'+letter+'</i>')+(b>0?' − '+b:' + '+Math.abs(b))+'</span>',rH+'<span class="markeer">'+( c>0?' − '+c+'<i>'+letter+'</i>':' + '+Math.abs(c)+'<i>'+letter+'</i>')+(b>0?' − '+b:' + '+Math.abs(b))+'</span>','Breng x-termen links, getallen rechts');
-    const stap2=stapRij(lidHTML(nLo,new Br(0),letter),brHTML(nRg),'Vereenvoudig');
-    const stap3=stapRij(lidHTML(nLo,new Br(0),letter)+`<span class="markeer"> : ${nLo.t}</span>`,brHTML(nRg)+`<span class="markeer"> : ${nLo.t}</span>`,'Deel door '+nLo.t);
-    const stap4=stapRij('<i>'+letter+'</i>',brHTML(opl),'Oplossing');
+    const stap1=stapRij(lH+'<span class="markeer">'+( c>0?' − '+c+'<i>'+letter+'</i>':' + '+Math.abs(c)+'<i>'+letter+'</i>')+(b>0?' − '+b:' + '+Math.abs(b))+'</span>',rH+'<span class="markeer">'+( c>0?' − '+c+'<i>'+letter+'</i>':' + '+Math.abs(c)+'<i>'+letter+'</i>')+(b>0?' − '+b:' + '+Math.abs(b))+'</span>','Werk de termen met een onbekende weg uit het ene lid. Werk de termen zonder onbekende weg uit het andere lid.');
+    const stap2=stapRij(lidHTML(nLo,new Br(0),letter),brHTML(nRg),'Herleid beide leden.');
+    const stap3=stapRij(lidHTML(nLo,new Br(0),letter)+`<span class="markeer"> : ${nLo.t}</span>`,brHTML(nRg)+`<span class="markeer"> : ${nLo.t}</span>`,'Werk de factor weg.');
+    const stap4=stapRij('<i>'+letter+'</i>',brHTML(opl),'Herleid.');
     return{verg:lH+' = '+rH,opl,letter,uitw:stapRij(lH,rH)+stap1+stap2+stap3+stap4};
   }
   if(sub===2){
@@ -446,10 +446,10 @@ function genB(){
     const b=new Br(rnd(-8,8));
     const c=coef.maal(opl).plus(b);
     const lH=lidHTML(coef,b,letter),rH=brHTML(c);
-    const stap1=stapRij(lH+`<span class="markeer">${b.t>0?' − '+brHTML(b.abs()):' + '+brHTML(b.abs())}</span>`,rH+`<span class="markeer">${b.t>0?' − '+brHTML(b.abs()):' + '+brHTML(b.abs())}</span>`,'Trek getal af van beide kanten');
+    const stap1=stapRij(lH+`<span class="markeer">${b.t>0?' − '+brHTML(b.abs()):' + '+brHTML(b.abs())}</span>`,rH+`<span class="markeer">${b.t>0?' − '+brHTML(b.abs()):' + '+brHTML(b.abs())}</span>`,'Werk de termen zonder onbekende weg uit het andere lid.');
     const cH=brHTML(coef);
-    const stap2=stapRij(lidHTML(coef,new Br(0),letter)+`<span class="markeer"> : ${cH}</span>`,brHTML(c.min(b))+`<span class="markeer"> : ${cH}</span>`,'Deel door coëfficiënt');
-    const stap3=stapRij('<i>'+letter+'</i>',brHTML(opl),'Oplossing');
+    const stap2=stapRij(lidHTML(coef,new Br(0),letter)+`<span class="markeer"> : ${cH}</span>`,brHTML(c.min(b))+`<span class="markeer"> : ${cH}</span>`,'Werk de factor weg.');
+    const stap3=stapRij('<i>'+letter+'</i>',brHTML(opl),'Herleid.');
     return{verg:lH+' = '+rH,opl,letter,uitw:stapRij(lH,rH)+stap1+stap2+stap3};
   }
   // sub===3: decimale coëfficiënt
@@ -465,8 +465,8 @@ function genB(){
     const ll=coef,lg=b,rl=c,nRg=rg.min(b),nLo=coef.min(c);
     const lH=lidHTML(ll,lg,letter),rH=lidHTML(rl,rg,letter);
     const stap1=stapRij(lH,rH)
-      +stapRij(lidHTML(nLo,new Br(0),letter),brHTML(nRg),'Breng termen samen')
-      +stapRij('<i>'+letter+'</i>',brHTML(opl),'Oplossing');
+      +stapRij(lidHTML(nLo,new Br(0),letter),brHTML(nRg),'Werk de termen met een onbekende weg uit het ene lid. Werk de termen zonder onbekende weg uit het andere lid.')
+      +stapRij('<i>'+letter+'</i>',brHTML(opl),'Herleid.');
     return{verg:lH+' = '+rH,opl,letter,uitw:stap1};
   }
 }
@@ -486,11 +486,11 @@ function genC(){
     const verg=`${a}(${b}<i>${letter}</i>${c>=0?' + '+c:' − '+Math.abs(c)}) = ${d}`;
     const ab=a*b,ac=a*c;
     const stap1H=stapRij(`${a}(${b}<i>${letter}</i>${c>=0?' + '+c:' − '+Math.abs(c)})`,`${d}`);
-    const stap2H=stapRij(lidHTML(new Br(ab),new Br(ac),letter),`${d}`,'Haakjes uitwerken');
-    const stap3H=stapRij(lidHTML(new Br(ab),new Br(ac),letter)+`<span class="markeer">${ac>0?' − '+ac:' + '+Math.abs(ac)}</span>`,`${d}<span class="markeer">${ac>0?' − '+ac:' + '+Math.abs(ac)}</span>`,'Trek getal af');
-    const stap4H=stapRij(`${ab}<i>${letter}</i>`,`${d-ac}`,'Vereenvoudig');
-    const stap5H=stapRij(`${ab}<i>${letter}</i><span class="markeer"> : ${ab}</span>`,`${d-ac}<span class="markeer"> : ${ab}</span>`,'Deel door '+ab);
-    const stap6H=stapRij('<i>'+letter+'</i>',brHTML(new Br(opl)),'Oplossing');
+    const stap2H=stapRij(lidHTML(new Br(ab),new Br(ac),letter),`${d}`,'Werk de haakjes weg.');
+    const stap3H=stapRij(lidHTML(new Br(ab),new Br(ac),letter)+`<span class="markeer">${ac>0?' − '+ac:' + '+Math.abs(ac)}</span>`,`${d}<span class="markeer">${ac>0?' − '+ac:' + '+Math.abs(ac)}</span>`,'Werk de termen zonder onbekende weg uit het andere lid.');
+    const stap4H=stapRij(`${ab}<i>${letter}</i>`,`${d-ac}`,'Herleid beide leden.');
+    const stap5H=stapRij(`${ab}<i>${letter}</i><span class="markeer"> : ${ab}</span>`,`${d-ac}<span class="markeer"> : ${ab}</span>`,'Werk de factor weg.');
+    const stap6H=stapRij('<i>'+letter+'</i>',brHTML(new Br(opl)),'Herleid.');
     return{verg,opl:new Br(opl),letter,uitw:stap1H+stap2H+stap3H+stap4H+stap5H+stap6H};
   }
   if(sub===2){
@@ -507,11 +507,11 @@ function genC(){
     const na1=lidHTML(new Br(ab),new Br(ac),letter);
     const nLo=new Br(ab-e),nRg=new Br(f-ac);
     const stap1=stapRij(lH,rH);
-    const stap2=stapRij(na1,rH,'Haakjes uitwerken');
-    const stap3=stapRij(na1+`<span class="markeer">${e>0?' − '+e+'<i>'+letter+'</i>':' + '+Math.abs(e)+'<i>'+letter+'</i>'}</span>`+`<span class="markeer">${ac>0?' − '+ac:' + '+Math.abs(ac)}</span>`,rH+`<span class="markeer">${e>0?' − '+e+'<i>'+letter+'</i>':' + '+Math.abs(e)+'<i>'+letter+'</i>'}</span>`+`<span class="markeer">${ac>0?' − '+ac:' + '+Math.abs(ac)}</span>`,'Termen samenvoegen');
-    const stap4=stapRij(lidHTML(nLo,new Br(0),letter),brHTML(nRg),'Vereenvoudig');
-    const stap5=stapRij(lidHTML(nLo,new Br(0),letter)+`<span class="markeer"> : ${nLo.t}</span>`,brHTML(nRg)+`<span class="markeer"> : ${nLo.t}</span>`,'Deel door '+nLo.t);
-    const stap6=stapRij('<i>'+letter+'</i>',brHTML(new Br(opl)),'Oplossing');
+    const stap2=stapRij(na1,rH,'Werk de haakjes weg.');
+    const stap3=stapRij(na1+`<span class="markeer">${e>0?' − '+e+'<i>'+letter+'</i>':' + '+Math.abs(e)+'<i>'+letter+'</i>'}</span>`+`<span class="markeer">${ac>0?' − '+ac:' + '+Math.abs(ac)}</span>`,rH+`<span class="markeer">${e>0?' − '+e+'<i>'+letter+'</i>':' + '+Math.abs(e)+'<i>'+letter+'</i>'}</span>`+`<span class="markeer">${ac>0?' − '+ac:' + '+Math.abs(ac)}</span>`,'Werk de termen met een onbekende weg uit het ene lid. Werk de termen zonder onbekende weg uit het andere lid.');
+    const stap4=stapRij(lidHTML(nLo,new Br(0),letter),brHTML(nRg),'Herleid beide leden.');
+    const stap5=stapRij(lidHTML(nLo,new Br(0),letter)+`<span class="markeer"> : ${nLo.t}</span>`,brHTML(nRg)+`<span class="markeer"> : ${nLo.t}</span>`,'Werk de factor weg.');
+    const stap6=stapRij('<i>'+letter+'</i>',brHTML(new Br(opl)),'Herleid.');
     return{verg:lH+' = '+rH,opl:new Br(opl),letter,uitw:stap1+stap2+stap3+stap4+stap5+stap6};
   }
   // sub===3: a(bx+c) = d(ex+f)  →  twee haakjes
@@ -529,11 +529,11 @@ function genC(){
     const na2=lidHTML(new Br(de),new Br(df),letter);
     const nRg=new Br(df-ac);
     const stap1=stapRij(lH,rH);
-    const stap2=stapRij(na1,na2,'Haakjes uitwerken (beide kanten)');
-    const stap3=stapRij(na1,na2,'Termen samenvoegen');
-    const stap4=stapRij(lidHTML(nLo,new Br(0),letter),brHTML(nRg),'Vereenvoudig');
-    const stap5=stapRij(lidHTML(nLo,new Br(0),letter)+`<span class="markeer"> : ${nLo.t}</span>`,brHTML(nRg)+`<span class="markeer"> : ${nLo.t}</span>`,'Deel door '+nLo.t);
-    const stap6=stapRij('<i>'+letter+'</i>',brHTML(new Br(opl)),'Oplossing');
+    const stap2=stapRij(na1,na2,'Werk de haakjes weg.');
+    const stap3=stapRij(na1,na2,'Werk de termen met een onbekende weg uit het ene lid. Werk de termen zonder onbekende weg uit het andere lid.');
+    const stap4=stapRij(lidHTML(nLo,new Br(0),letter),brHTML(nRg),'Herleid beide leden.');
+    const stap5=stapRij(lidHTML(nLo,new Br(0),letter)+`<span class="markeer"> : ${nLo.t}</span>`,brHTML(nRg)+`<span class="markeer"> : ${nLo.t}</span>`,'Werk de factor weg.');
+    const stap6=stapRij('<i>'+letter+'</i>',brHTML(new Br(opl)),'Herleid.');
     return{verg:lH+' = '+rH,opl:new Br(opl),letter,uitw:stap1+stap2+stap3+stap4+stap5+stap6};
   }
 }
