@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vergelijkingen — Klassikaal scherm</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080b14;
+    --surface: #111420;
+    --border: #1e2236;
+    --text: #e8eaf0;
+    --text-dim: #4a5070;
+    --mono: 'Space Mono', monospace;
+    --body: 'Nunito', sans-serif;
+    --kleur: #639922;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: var(--bg); color: var(--text);
+    font-family: var(--body);
+  }
+
+  .scherm {
+    width: 100vw; height: 100vh;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    gap: 3rem; padding: 4vw;
+  }
+
+  /* ── Titelbalk ── */
+  .titel {
+    font-size: clamp(1rem, 2.5vw, 1.6rem);
+    font-weight: 700; color: var(--text-dim);
+    letter-spacing: 0.12em; text-transform: uppercase;
+    text-align: center;
+  }
+
+  /* ── Grote getallen ── */
+  .getallen {
+    display: flex; gap: 8vw; align-items: flex-end;
+    justify-content: center;
+  }
+  .getal-blok { text-align: center; }
+  .getal-label {
+    font-size: clamp(0.7rem, 1.5vw, 1rem);
+    color: var(--text-dim); text-transform: uppercase;
+    letter-spacing: 0.1em; margin-bottom: 0.3rem;
+  }
+  .getal-waarde {
+    font-size: clamp(4rem, 14vw, 10rem);
+    font-weight: 900; line-height: 1;
+    transition: color 1.5s ease;
+    font-family: var(--mono);
+  }
+  #pct-waarde { color: var(--kleur); }
+  #timer-waarde { color: var(--text-dim); }
+
+  /* ── Balk ── */
+  .balk-wrap {
+    width: min(80vw, 900px);
+    display: flex; flex-direction: column; gap: 1rem;
+  }
+  .balk-bg {
+    height: clamp(16px, 2.5vw, 28px);
+    background: var(--surface);
+    border-radius: 99px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .balk-fill {
+    height: 100%; width: 0%;
+    border-radius: 99px;
+    background-color: var(--kleur);
+    transition: width 2.5s cubic-bezier(.4,0,.2,1), background-color 1.5s ease;
+  }
+
+  /* ── Spanning label ── */
+  .spanning-label {
+    text-align: center;
+    font-size: clamp(1rem, 2.5vw, 1.6rem);
+    font-weight: 700;
+    min-height: 1.4em;
+    transition: color 1.5s ease;
+    color: var(--text-dim);
+  }
+
+  /* ── Reveal ── */
+  .reveal {
+    display: none;
+    flex-direction: column; align-items: center; gap: 1rem;
+    animation: revealIn 0.8s cubic-bezier(.4,0,.2,1) both;
+  }
+  .reveal.zichtbaar { display: flex; }
+  .reveal-label {
+    font-size: clamp(0.8rem, 1.8vw, 1.1rem);
+    color: var(--text-dim); text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .reveal-waarde {
+    font-size: clamp(3rem, 10vw, 7rem);
+    font-weight: 900; font-family: var(--mono);
+    color: #1D9E75;
+    line-height: 1;
+  }
+
+  @keyframes revealIn {
+    from { opacity: 0; transform: translateY(30px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* ── Pulse overlay op balk bij spanning ── */
+  .balk-bg { position: relative; }
+  .balk-pulse {
+    position: absolute; inset: 0; border-radius: 99px;
+    background: white; opacity: 0; pointer-events: none;
+  }
+  @keyframes puls {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 0.06; }
+  }
+  .pulseren .balk-pulse { animation: puls 0.9s ease-in-out infinite; }
+
+  /* ── Wacht-state ── */
+  .wacht {
+    text-align: center; color: var(--text-dim);
+    font-size: clamp(1rem, 2vw, 1.3rem); line-height: 1.8;
+  }
+  .wacht strong { color: var(--text); display: block; font-size: 1.4em; margin-bottom: 0.5rem; }
+</style>
+</head>
+<body>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzI2xZ1lsJmwcPpIq92fKdBkvaPQ5J62796V9kWua9F8X1gcmehC0vrRWzsnFCCZmvK/exec";
+const POLL_INTERVAL = 5000;
+</script>
+
+<div class="scherm" id="scherm">
+
+  <div class="wacht" id="wacht-view">
+    <strong>🧮 Vergelijkingen</strong>
+    Wacht op instellingen van de leerkracht…
+  </div>
+
+  <div id="les-view" style="display:none; flex-direction:column; align-items:center; gap:3rem; width:100%;">
+
+    <div class="titel">klassikale voortgang</div>
+
+    <div class="getallen">
+      <div class="getal-blok">
+        <div class="getal-label">voortgang</div>
+        <div class="getal-waarde" id="pct-waarde">0%</div>
+      </div>
+      <div class="getal-blok">
+        <div class="getal-label">resterende tijd</div>
+        <div class="getal-waarde" id="timer-waarde">--:--</div>
+      </div>
+    </div>
+
+    <div class="balk-wrap">
+      <div class="balk-bg" id="balk-bg">
+        <div class="balk-fill" id="balk-fill"></div>
+        <div class="balk-pulse"></div>
+      </div>
+    </div>
+
+    <div class="spanning-label" id="spanning-label"></div>
+
+    <div class="reveal" id="reveal-blok">
+      <div class="reveal-label">de geheime oplossing</div>
+      <div class="reveal-waarde" id="reveal-waarde"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+const FASES = [
+  { max: 30,  kleur: "#639922", timer: "#4a5070", label: "De klas is goed op weg…" },
+  { max: 60,  kleur: "#BA7517", timer: "#BA7517", label: "Meer dan halverwege — doorpakken!" },
+  { max: 85,  kleur: "#D85A30", timer: "#D85A30", label: "Bijna daar… nog even volhouden!" },
+  { max: 99,  kleur: "#E24B4A", timer: "#E24B4A", label: "NU! Haalt de klas het?!" },
+  { max: 100, kleur: "#1D9E75", timer: "#1D9E75", label: "YES! De klas heeft het gehaald! 🎉" },
+];
+
+function getFase(pct) {
+  return FASES.find(f => pct <= f.max) || FASES[FASES.length - 1];
+}
+
+let huidigPct = 0;
+let revealed  = false;
+let timerTicker = null;
+let eindtijd = null;
+let oplossing = "";
+
+// ── Poll Sheets ──────────────────────────────────────────────────
+async function poll() {
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?action=klassikaal&t=${Date.now()}`);
+    const data = await res.json();
+
+    if (!data.eindtijd) return;
+
+    oplossing = data.oplossing || "";
+    const nieuweEindtijd = new Date(data.eindtijd);
+
+    if (!eindtijd || nieuweEindtijd.getTime() !== eindtijd.getTime()) {
+      eindtijd = nieuweEindtijd;
+      huidigPct = 0;
+      revealed  = false;
+      document.getElementById('reveal-blok').classList.remove('zichtbaar');
+      if (!timerTicker) {
+        timerTicker = setInterval(tickTimer, 1000);
+        tickTimer();
+      }
+    }
+
+    document.getElementById('wacht-view').style.display  = 'none';
+    document.getElementById('les-view').style.display    = 'flex';
+
+  } catch(e) {}
+}
+
+// ── Timer tick ───────────────────────────────────────────────────
+function tickTimer() {
+  if (!eindtijd) return;
+
+  const nu       = Date.now();
+  const totaalMs = eindtijd.getTime() - (eindtijd.getTime() - /* startMs bewaard via: */ (eindtijd.getTime()));
+  const restMs   = Math.max(0, eindtijd.getTime() - nu);
+
+  // Bereken voortgang op basis van eindtijd en een vaste startoffset
+  // We slaan de eerste keer de "start" op
+  if (!window._startMs) window._startMs = nu;
+  const verstrekenMs = nu - window._startMs;
+  const totalMs_dyn  = eindtijd.getTime() - window._startMs;
+  const ratioBasis   = totalMs_dyn > 0 ? Math.min(verstrekenMs / totalMs_dyn, 1) : 0;
+
+  const basePct = Math.round(ratioBasis * 100);
+  const jitter  = basePct > 0 && basePct < 97 ? Math.round((Math.random() - 0.35) * 5) : 0;
+  const nieuwPct = restMs === 0 ? 100 : Math.min(97, Math.max(huidigPct, basePct + jitter));
+
+  if (nieuwPct !== huidigPct || restMs === 0) {
+    huidigPct = restMs === 0 ? 100 : nieuwPct;
+    updateDisplay(huidigPct, restMs);
+  }
+
+  // Timer display
+  const restMin = Math.floor(restMs / 60000);
+  const restSec = Math.floor((restMs % 60000) / 1000);
+  document.getElementById('timer-waarde').textContent =
+    restMs === 0 ? '00:00' : String(restMin).padStart(2,'0') + ':' + String(restSec).padStart(2,'0');
+
+  if (restMs === 0 && !revealed) {
+    huidigPct = 100;
+    updateDisplay(100, 0);
+    reveal();
+  }
+}
+
+function updateDisplay(pct, restMs) {
+  const fase = getFase(pct);
+
+  document.getElementById('pct-waarde').textContent    = pct + '%';
+  document.getElementById('pct-waarde').style.color    = fase.kleur;
+  document.getElementById('timer-waarde').style.color  = fase.timer;
+  document.getElementById('spanning-label').textContent = fase.label;
+  document.getElementById('spanning-label').style.color = fase.kleur;
+  document.getElementById('balk-fill').style.width     = pct + '%';
+  document.getElementById('balk-fill').style.backgroundColor = fase.kleur;
+
+  const balkg = document.getElementById('balk-bg');
+  if (pct >= 85 && pct < 100) balkg.classList.add('pulseren');
+  else balkg.classList.remove('pulseren');
+}
+
+function reveal() {
+  if (revealed) return;
+  revealed = true;
+  setTimeout(() => {
+    document.getElementById('reveal-waarde').textContent = oplossing || '?';
+    document.getElementById('reveal-blok').classList.add('zichtbaar');
+  }, 600);
+}
+
+// ── Start ────────────────────────────────────────────────────────
+poll();
+setInterval(poll, POLL_INTERVAL);
+</script>
+</body>
+</html>
