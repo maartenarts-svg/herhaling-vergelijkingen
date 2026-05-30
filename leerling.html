@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vergelijkingen</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f0f4f8; --surface:#fff; --surface2:#f1f5f9; --border:#e2e8f0;
+  --text:#1e293b; --muted:#64748b; --accent:#3b82f6; --purple:#a855f7;
+  --green:#16a34a; --green-bg:#f0fdf4; --green-bd:#86efac;
+  --red:#dc2626; --red-bg:#fef2f2; --red-bd:#fca5a5;
+  --radius:12px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ── Schermen ── */
+.scherm{display:none;min-height:100vh;padding:1.5rem 1rem 3rem;}
+.scherm.actief{display:block;}
+.wrap{max-width:520px;margin:0 auto;}
+
+/* ── Login ── */
+.login-top{text-align:center;padding:2.5rem 0 1.5rem;}
+.login-top h1{font-size:1.8rem;font-weight:900;color:var(--accent);}
+.login-top p{color:var(--muted);margin-top:.3rem;font-size:.9rem;}
+
+/* ── Kaarten ── */
+.card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;}
+.card-titel{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.75rem;}
+
+/* ── Inputs ── */
+input[type=text],input[type=number]{
+  width:100%;padding:.75rem 1rem;border:2px solid var(--border);border-radius:9px;
+  font-family:'Nunito',sans-serif;font-size:1rem;color:var(--text);
+  background:var(--surface2);outline:none;transition:border-color .2s;
+}
+input:focus{border-color:var(--accent);}
+
+/* ── Knoppen ── */
+.btn{padding:.75rem 1.25rem;border:none;border-radius:9px;font-family:'Nunito',sans-serif;
+  font-size:.95rem;font-weight:700;cursor:pointer;transition:all .15s;width:100%;}
+.btn:active{transform:scale(.98);}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1.5px solid var(--border);}
+.btn-success{background:var(--green);color:#fff;}
+.btn-sm{padding:.5rem .9rem;font-size:.85rem;width:auto;}
+
+/* ── Groepkaarten ── */
+.groep-kaart{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);
+  padding:1rem 1.2rem;margin-bottom:.6rem;cursor:pointer;display:flex;align-items:flex-start;gap:.9rem;
+  transition:border-color .2s,background .2s;}
+.groep-kaart:hover{border-color:var(--accent);}
+.groep-kaart.sel-A{border-color:#ef4444;background:#fff5f5;}
+.groep-kaart.sel-B{border-color:var(--accent);background:#eff6ff;}
+.groep-kaart.sel-C{border-color:#eab308;background:#fefce8;}
+.groep-letter{font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700;min-width:2rem;line-height:1;}
+.groep-letter.A{color:#ef4444;}.groep-letter.B{color:var(--accent);}.groep-letter.C{color:#eab308;}
+.groep-info h3{font-size:.95rem;font-weight:700;margin-bottom:.15rem;}
+.groep-info p{font-size:.82rem;color:var(--muted);line-height:1.4;}
+
+/* ── Oefening header ── */
+.oef-header{display:flex;justify-content:space-between;align-items:center;
+  background:var(--surface);border-bottom:2px solid var(--border);padding:.8rem 1rem;
+  position:sticky;top:0;z-index:10;flex-wrap:wrap;gap:.5rem;}
+.oef-info{font-size:.82rem;color:var(--muted);}
+.oef-info strong{color:var(--text);}
+.score-pil{background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;
+  padding:.25rem .75rem;font-family:'JetBrains Mono',monospace;font-size:.82rem;}
+.score-pil span{color:var(--accent);font-weight:700;}
+
+/* ── Vergelijking weergave ── */
+.verg-display{font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700;
+  text-align:center;padding:1.5rem .5rem;letter-spacing:.02em;line-height:1.6;}
+.verg-display i{font-style:italic;}
+.alg-breuk{display:inline-flex;flex-direction:column;align-items:center;
+  vertical-align:middle;line-height:1.15;font-size:.85em;margin:0 2px;}
+.alg-breuk .at{padding:0 3px;border-bottom:2px solid currentColor;line-height:1.3;}
+.alg-breuk .an{padding:0 3px;line-height:1.3;}
+
+/* ── Antwoord invoer ── */
+.antwoord-zone{display:flex;gap:.6rem;align-items:stretch;}
+.antwoord-zone input{flex:1;font-family:'JetBrains Mono',monospace;font-size:1.1rem;
+  font-weight:700;text-align:center;}
+.antwoord-zone .btn{width:auto;padding:.75rem 1.25rem;}
+
+/* ── Feedback ── */
+.feedback{border-radius:9px;padding:.8rem 1rem;font-size:.9rem;font-weight:600;
+  margin-top:.75rem;display:none;}
+.feedback.ok{background:var(--green-bg);border:1.5px solid var(--green-bd);color:var(--green);display:block;}
+.feedback.nok{background:var(--red-bg);border:1.5px solid var(--red-bd);color:var(--red);display:block;}
+
+/* ── Uitwerking ── */
+.uitwerking{margin-top:1rem;background:var(--surface2);border:1.5px solid var(--border);
+  border-radius:var(--radius);padding:1rem;font-family:'JetBrains Mono',monospace;font-size:.9rem;}
+.uitwerking-titel{font-family:'Nunito',sans-serif;font-size:.7rem;font-weight:800;
+  text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.6rem;}
+.stap-rij{display:grid;grid-template-columns:1fr 20px 1fr;align-items:baseline;
+  padding:2px 0;line-height:1.8;}
+.stap-l{text-align:right;}.stap-r{text-align:left;}
+.stap-eq{text-align:center;color:var(--muted);font-weight:700;}
+.stap-lbl{font-family:'Nunito',sans-serif;font-size:.65rem;font-weight:800;
+  text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin:.5rem 0 .1rem;
+  grid-column:1/-1;}
+.markeer{color:var(--purple);font-weight:700;}
+
+/* ── Voortgang balk ── */
+.voortgang-wrap{margin-bottom:1rem;}
+.voortgang-meta{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);margin-bottom:.3rem;}
+.voortgang-bg{height:6px;background:var(--border);border-radius:99px;overflow:hidden;}
+.voortgang-fill{height:100%;background:linear-gradient(90deg,var(--accent),#8b5cf6);
+  border-radius:99px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+
+/* ── Acties ── */
+.actie-rij{display:flex;gap:.6rem;margin-top:1rem;flex-wrap:wrap;}
+.actie-rij .btn{flex:1;min-width:120px;}
+
+.hint{font-size:.75rem;color:var(--muted);text-align:center;margin-top:.4rem;font-style:italic;}
+.fout-melding{color:var(--red);font-size:.82rem;text-align:center;padding:.3rem 0;display:none;}
+.override-melding{font-size:.78rem;color:var(--accent);background:#eff6ff;
+  border-radius:6px;padding:.35rem .7rem;margin-bottom:.5rem;}
+</style>
+</head>
+<body>
+
+<script>
+const SCRIPT_URL = "JOUW_APPS_SCRIPT_URL_HIER";
+const PUNTEN = {A:2, B:4, C:10};
+</script>
+
+<!-- ══ SCHERM 1: LOGIN ══ -->
+<div id="s-login" class="scherm actief">
+<div class="wrap">
+  <div class="login-top">
+    <div style="font-size:2.5rem">🧮</div>
+    <h1>Vergelijkingen</h1>
+    <p>Geef je naam in om te starten</p>
+  </div>
+  <div class="card">
+    <input type="text" id="inp-naam" placeholder="Jouw naam" autocomplete="off"/>
+    <div style="height:.6rem"></div>
+    <button class="btn btn-primary" onclick="login()">Verder →</button>
+    <div class="fout-melding" id="login-fout">Vul je naam in.</div>
+  </div>
+</div>
+</div>
+
+<!-- ══ SCHERM 2: GROEPSKEUZE ══ -->
+<div id="s-groep" class="scherm">
+<div class="wrap">
+  <div style="padding:1.5rem 0 1rem;">
+    <p style="font-size:.82rem;color:var(--muted)">Ingelogd als</p>
+    <p style="font-weight:800;font-size:1.1rem;" id="groep-naam"></p>
+  </div>
+  <div class="card">
+    <div class="card-titel">Kies je reeks</div>
+    <p style="font-size:.85rem;color:var(--muted);line-height:1.5;margin-bottom:.9rem;">
+      Kies eerlijk. Reeks A is voor wie het nog moeilijk vindt. Reeks B voor wie wil oefenen.
+      Reeks C voor wie verder wil gaan. Je kan later altijd wisselen.
+    </p>
+    <div id="override-melding" class="override-melding" style="display:none;"></div>
+    <div class="groep-kaart" id="kaart-A" onclick="kiesGroep('A')">
+      <div class="groep-letter A">A</div>
+      <div class="groep-info">
+        <h3>Reeks A — basisvergelijkingen</h3>
+        <p>Gehele getallen, geheel resultaat. Alle drie de types.</p>
+      </div>
+    </div>
+    <div class="groep-kaart" id="kaart-B" onclick="kiesGroep('B')">
+      <div class="groep-letter B">B</div>
+      <div class="groep-info">
+        <h3>Reeks B — met breuken</h3>
+        <p>Coëfficiënten of resultaat kunnen breuken zijn.</p>
+      </div>
+    </div>
+    <div class="groep-kaart" id="kaart-C" onclick="kiesGroep('C')">
+      <div class="groep-letter C">C</div>
+      <div class="groep-info">
+        <h3>Reeks C — met haakjes</h3>
+        <p>Eerst haakjes uitwerken, dan oplossen.</p>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="btn-start" onclick="startOefening()" style="display:none;margin-top:.5rem;">
+      Start reeks <span id="btn-start-lbl">?</span> →
+    </button>
+  </div>
+</div>
+</div>
+
+<!-- ══ SCHERM 3: OEFENING ══ -->
+<div id="s-oef" class="scherm">
+  <div class="oef-header">
+    <div class="oef-info">
+      <strong id="oef-naam-lbl"></strong>
+      · Reeks <strong id="oef-reeks-lbl"></strong>
+      · <button class="btn btn-secondary btn-sm" onclick="wisselReeks()" style="display:inline-flex;padding:.2rem .6rem;font-size:.75rem;">wissel</button>
+    </div>
+    <div class="score-pil">⚡ <span id="score-lbl">0</span> pt</div>
+  </div>
+
+  <div class="wrap" style="padding-top:1rem;">
+    <div class="voortgang-wrap">
+      <div class="voortgang-meta">
+        <span>Klassikale voortgang</span>
+        <span id="voortgang-pct-lbl">0%</span>
+      </div>
+      <div class="voortgang-bg"><div class="voortgang-fill" id="voortgang-fill" style="width:0%"></div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-titel" id="oef-type-lbl"></div>
+      <div class="verg-display" id="verg-display"></div>
+      <div style="margin-bottom:.4rem;font-size:.85rem;color:var(--muted);">
+        <i id="var-lbl">x</i> =
+      </div>
+      <div class="antwoord-zone">
+        <input type="text" id="antwoord-inp" placeholder="?" autocomplete="off"
+          onkeydown="if(event.key==='Enter')controleer()"/>
+        <button class="btn btn-primary" onclick="controleer()">✓</button>
+      </div>
+      <p class="hint">Breuk: typ bv. 3/4 of -5/2</p>
+      <div class="feedback" id="feedback"></div>
+      <div class="uitwerking" id="uitwerking" style="display:none;">
+        <div class="uitwerking-titel">Uitwerking</div>
+        <div id="uitwerking-inhoud"></div>
+      </div>
+      <div class="actie-rij">
+        <button class="btn btn-secondary" id="btn-volgende" onclick="volgende()" style="display:none;">Volgende →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ BREUK KLASSE ══
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b];}return a||1;}
+class Br{
+  constructor(t,n=1){
+    if(n===0)throw new Error('n=0');
+    const g=gcd(Math.abs(t),Math.abs(n)),s=n<0?-1:1;
+    this.t=s*t/g; this.n=s*n/g;
+  }
+  static v(x){
+    if(x instanceof Br)return x;
+    if(typeof x==='number'){
+      if(Number.isInteger(x))return new Br(x);
+      const s=Math.sign(x),abs=Math.abs(x);
+      let [p0,p1,q0,q1]=[0,1,1,0],r=abs;
+      for(let i=0;i<50;i++){
+        const a=Math.floor(r);[p0,p1]=[p1,a*p1+p0];[q0,q1]=[q1,a*q1+q0];
+        if(q1&&Math.abs(p1/q1-abs)<1e-9)return new Br(s*p1,q1);
+        const rest=r-a;if(rest<1e-10)break;r=1/rest;
+      }
+      return new Br(Math.round(s*abs*1000),1000);
+    }
+    return null;
+  }
+  plus(b){b=Br.v(b);return new Br(this.t*b.n+b.t*this.n,this.n*b.n);}
+  min(b){b=Br.v(b);return new Br(this.t*b.n-b.t*this.n,this.n*b.n);}
+  maal(b){b=Br.v(b);return new Br(this.t*b.t,this.n*b.n);}
+  deel(b){b=Br.v(b);return new Br(this.t*b.n,this.n*b.t);}
+  neg(){return new Br(-this.t,this.n);}
+  abs(){return new Br(Math.abs(this.t),this.n);}
+  isNul(){return this.t===0;}
+  isGeh(){return this.n===1;}
+  eq(b){b=Br.v(b);return this.t===b.t&&this.n===b.n;}
+  val(){return this.t/this.n;}
+}
+
+// ══ WEERGAVE HULPFUNCTIES ══
+function brHTML(b){
+  if(b.n===1)return`${b.t}`;
+  const t=b.t<0?`−${Math.abs(b.t)}`:`${b.t}`;
+  return`<span class="alg-breuk"><span class="at">${t}</span><span class="an">${b.n}</span></span>`;
+}
+// term: coef * letter (of getal als letter null)
+function termHTML(coef,letter=null,{eerst=false,markeer=false}={}){
+  if(coef.isNul())return'';
+  const kl=markeer?'class="markeer"':'';
+  const wrap=(s)=>markeer?`<span class="markeer">${s}</span>`:s;
+  const abs=coef.abs();
+  const pos=coef.t>0;
+  const absStr=brHTML(abs);
+  if(!letter){
+    if(eerst)return wrap(pos?absStr:`−${absStr}`);
+    return wrap(pos?` + ${absStr}`:` − ${absStr}`);
+  }
+  // letter: cursief
+  const ltr=`<i>${letter}</i>`;
+  const c=(abs.t===1&&abs.n===1)?'':absStr;
+  if(eerst)return wrap(pos?`${c}${ltr}`:`−${c}${ltr}`);
+  return wrap(pos?` + ${c}${ltr}`:` − ${c}${ltr}`);
+}
+function lidHTML(coOnb,coGet,letter){
+  let h='';let eerst=true;
+  if(!coOnb.isNul()){h+=termHTML(coOnb,letter,{eerst});eerst=false;}
+  if(!coGet.isNul()){h+=termHTML(coGet,null,{eerst});eerst=false;}
+  if(h==='')return'0';
+  return h;
+}
+function stapRij(lH,rH,label=null){
+  let h='';
+  if(label)h+=`<div class="stap-rij"><div class="stap-lbl">${label}</div></div>`;
+  h+=`<div class="stap-rij"><div class="stap-l">${lH}</div><div class="stap-eq">=</div><div class="stap-r">${rH}</div></div>`;
+  return h;
+}
+
+// ══ EINDIG DECIMAAL? ══
+function isEindigDecimaal(b){
+  let n=b.n;
+  while(n%2===0)n/=2;
+  while(n%5===0)n/=5;
+  return n===1;
+}
+
+// ══ ANTWOORD PARSEN ══
+function parsAntwoord(s){
+  s=s.trim().replace(',','.');
+  // breuk: optioneel minteken, teller, slash, noemer
+  const fm=s.match(/^(-?)(-?\d+)\s*\/\s*(\d+)$/);
+  if(fm){
+    const sign=fm[1]==='-'?-1:1;
+    const t=sign*parseInt(fm[2]),n=parseInt(fm[3]);
+    if(n===0)return null;
+    return new Br(t,n);
+  }
+  const num=parseFloat(s);
+  if(isNaN(num))return null;
+  return Br.v(num);
+}
+
+function controleerAntwoord(ingegeven, juist){
+  const ing=parsAntwoord(ingegeven);
+  if(!ing)return{ok:false,reden:'parse'};
+  // Is het juiste antwoord een eindig decimaal?
+  if(isEindigDecimaal(juist)){
+    // Beide aanvaarden: breuk of decimaal
+    if(Math.abs(ing.val()-juist.val())<1e-9)return{ok:true};
+  }else{
+    // Enkel breuk aanvaarden — exact gelijk na vereenvoudigen
+    if(ing.eq(juist))return{ok:true};
+    // Decimaal ingegeven maar antwoord is repeterend
+    if(Math.abs(ing.val()-juist.val())<1e-4&&!ing.eq(juist))
+      return{ok:false,reden:'decimaal_repeterend'};
+  }
+  return{ok:false,reden:'fout'};
+}
+
+// ══ WILLEKEURIGE GETALLEN ══
+function rnd(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+function rndNulvrij(min,max){let v;do{v=rnd(min,max);}while(v===0);return v;}
+function rndNietNul(arr){return arr[rnd(0,arr.length-1)];}
+
+// ══ VERGELIJKING GENERATOREN ══
+
+// Reeks A: gehele coëfficiënten, geheel resultaat
+// Types: x+a=b, ax=b, ax+b=cx+d
+function genA(){
+  const types=['type1','type2','type3'];
+  const type=rndNietNul(types);
+  const letter=rndNietNul(['x','y','t','a','n']);
+
+  if(type==='type1'){
+    // x + a = b, oplossing = b - a (geheel)
+    const opl=rnd(-10,10);
+    const a=rndNulvrij(-12,12);
+    const b=opl+a;
+    const verg=a>=0?`${letter} + ${a} = ${b}`:`${letter} − ${Math.abs(a)} = ${b}`;
+    const stap1=a>=0
+      ?stapRij(termHTML(new Br(1),letter,{eerst:true})+termHTML(new Br(a),null)+`<span class="markeer"> − ${a}</span>`,`${b}<span class="markeer"> − ${a}</span>`,'Trek '+a+' af van beide kanten')
+      :stapRij(termHTML(new Br(1),letter,{eerst:true})+termHTML(new Br(a),null)+`<span class="markeer"> + ${Math.abs(a)}</span>`,`${b}<span class="markeer"> + ${Math.abs(a)}</span>`,'Tel '+Math.abs(a)+' op bij beide kanten');
+    const uitw=stapRij(termHTML(new Br(1),letter,{eerst:true})+termHTML(new Br(a)),''+b)
+      +stap1
+      +stapRij('<i>'+letter+'</i>',''+opl,'Oplossing');
+    return{verg,opl:new Br(opl),letter,uitw};
+  }
+  if(type==='type2'){
+    const a=rndNulvrij(-9,9);
+    const opl=rndNulvrij(-10,10);
+    const b=a*opl;
+    const verg=`${a}<i>${letter}</i> = ${b}`;
+    const uitw=stapRij(`${a}<i>${letter}</i>`,''+b)
+      +stapRij(`${a}<i>${letter}</i><span class="markeer"> : ${a}</span>`,`${b}<span class="markeer"> : ${a}</span>`,'Deel beide kanten door '+a)
+      +stapRij('<i>'+letter+'</i>',''+opl,'Oplossing');
+    return{verg,opl:new Br(opl),letter,uitw};
+  }
+  // type3: ax+b=cx+d
+  {
+    const opl=rnd(-8,8);
+    let a,c;
+    do{a=rnd(-6,6);c=rnd(-6,6);}while(a===c||a===0&&c===0);
+    const b=rndNulvrij(-10,10);
+    const d=(a-c)*opl+b; // zodat opl klopt
+    const ll=new Br(a);const lg=new Br(b);
+    const rl=new Br(c);const rg=new Br(d);
+    const nLo=ll.min(rl); // a-c
+    const nRg=rg.min(lg); // d-b
+    const lH=lidHTML(ll,lg,letter);
+    const rH=lidHTML(rl,rg,letter);
+    const stap1=stapRij(
+      lH+`<span class="markeer">${c>0?' − '+c+'<i>'+letter+'</i>':' + '+Math.abs(c)+'<i>'+letter+'</i>'}</span>`+`<span class="markeer">${b>0?' − '+b:' + '+Math.abs(b)}</span>`,
+      rH+`<span class="markeer">${c>0?' − '+c+'<i>'+letter+'</i>':' + '+Math.abs(c)+'<i>'+letter+'</i>'}</span>`+`<span class="markeer">${b>0?' − '+b:' + '+Math.abs(b)}</span>`,
+      'Breng x-termen links, getallen rechts'
+    );
+    const stap2=stapRij(lidHTML(nLo,new Br(0),letter),brHTML(nRg),'Vereenvoudig');
+    const stap3=stapRij(lidHTML(nLo,new Br(0),letter)+`<span class="markeer"> : ${nLo.t}</span>`,brHTML(nRg)+`<span class="markeer"> : ${nLo.t}</span>`,'Deel door '+nLo.t);
+    const stap4=stapRij('<i>'+letter+'</i>',brHTML(new Br(opl)),'Oplossing');
+    const uitw=stapRij(lH,rH)+stap1+stap2+stap3+stap4;
+    return{verg:lH+' = '+rH,opl:new Br(opl),letter,uitw};
+  }
+}
+
+// Reeks B: zelfde types maar resultaat of coëfficiënt kan breuk zijn
+function genB(){
+  const sub=rnd(1,3);
+  const letter=rndNietNul(['x','y','t','a','n','m']);
+
+  if(sub===1){
+    // ax + b = cx + d, gehele coëff maar resultaat is breuk (a-c deelt d-b niet)
+    let a,c,b,d,opl;
+    let pogingen=0;
+    do{
+      a=rndNulvrij(-7,7);c=rndNulvrij(-7,7);
+      if(a===c){c++;if(c===0)c++;}
+      b=rndNulvrij(-10,10);d=rndNulvrij(-10,10);
+      const teller=d-b,noemer=a-c;
+      if(noemer!==0){opl=new Br(teller,noemer);}
+      pogingen++;
+    }while(pogingen<50&&(!opl||opl.isGeh()||Math.abs(opl.t)>30||opl.n>12));
+    if(!opl)return genB();
+    const ll=new Br(a),lg=new Br(b),rl=new Br(c),rg=new Br(d);
+    const nLo=ll.min(rl),nRg=rg.min(lg);
+    const lH=lidHTML(ll,lg,letter),rH=lidHTML(rl,rg,letter);
+    const stap1=stapRij(lH+'<span class="markeer">'+( c>0?' − '+c+'<i>'+letter+'</i>':' + '+Math.abs(c)+'<i>'+letter+'</i>')+(b>0?' − '+b:' + '+Math.abs(b))+'</span>',rH+'<span class="markeer">'+( c>0?' − '+c+'<i>'+letter+'</i>':' + '+Math.abs(c)+'<i>'+letter+'</i>')+(b>0?' − '+b:' + '+Math.abs(b))+'</span>','Breng x-termen links, getallen rechts');
+    const stap2=stapRij(lidHTML(nLo,new Br(0),letter),brHTML(nRg),'Vereenvoudig');
+    const stap3=stapRij(lidHTML(nLo,new Br(0),letter)+`<span class="markeer"> : ${nLo.t}</span>`,brHTML(nRg)+`<span class="markeer"> : ${nLo.t}</span>`,'Deel door '+nLo.t);
+    const stap4=stapRij('<i>'+letter+'</i>',brHTML(opl),'Oplossing');
+    return{verg:lH+' = '+rH,opl,letter,uitw:stapRij(lH,rH)+stap1+stap2+stap3+stap4};
+  }
+  if(sub===2){
+    // Breuk als coëfficiënt: (p/q)x + b = c, opl geheel of breuk
+    const p=rndNulvrij(1,5),q=rnd(2,6);
+    const coef=new Br(p,q);
+    const opl=new Br(rndNulvrij(-8,8));
+    const b=new Br(rnd(-8,8));
+    const c=coef.maal(opl).plus(b);
+    const lH=lidHTML(coef,b,letter),rH=brHTML(c);
+    const stap1=stapRij(lH+`<span class="markeer">${b.t>0?' − '+brHTML(b.abs()):' + '+brHTML(b.abs())}</span>`,rH+`<span class="markeer">${b.t>0?' − '+brHTML(b.abs()):' + '+brHTML(b.abs())}</span>`,'Trek getal af van beide kanten');
+    const cH=brHTML(coef);
+    const stap2=stapRij(lidHTML(coef,new Br(0),letter)+`<span class="markeer"> : ${cH}</span>`,brHTML(c.min(b))+`<span class="markeer"> : ${cH}</span>`,'Deel door coëfficiënt');
+    const stap3=stapRij('<i>'+letter+'</i>',brHTML(opl),'Oplossing');
+    return{verg:lH+' = '+rH,opl,letter,uitw:stapRij(lH,rH)+stap1+stap2+stap3};
+  }
+  // sub===3: decimale coëfficiënt
+  {
+    const decimalen=[0.2,0.25,0.4,0.5,0.75];
+    const dec=rndNietNul(decimalen);
+    const coef=Br.v(dec);
+    const b=new Br(rnd(-8,8));
+    const c=new Br(rndNulvrij(-6,6));
+    const rg=new Br(rnd(-8,8));
+    const opl=rg.min(b).deel(coef.min(c).isNul()?new Br(1):coef.min(c));
+    if(coef.min(c).isNul())return genB();
+    const ll=coef,lg=b,rl=c,nRg=rg.min(b),nLo=coef.min(c);
+    const lH=lidHTML(ll,lg,letter),rH=lidHTML(rl,rg,letter);
+    const stap1=stapRij(lH,rH)
+      +stapRij(lidHTML(nLo,new Br(0),letter),brHTML(nRg),'Breng termen samen')
+      +stapRij('<i>'+letter+'</i>',brHTML(opl),'Oplossing');
+    return{verg:lH+' = '+rH,opl,letter,uitw:stap1};
+  }
+}
+
+// Reeks C: haakjes, gehele coëfficiënten
+function genC(){
+  const sub=rnd(1,3);
+  const letter=rndNietNul(['x','y','t','n']);
+
+  if(sub===1){
+    // a(bx + c) = d  →  één haakje links
+    const a=rndNulvrij(-4,4);
+    const b=rndNulvrij(-5,5);
+    const c=rndNulvrij(-8,8);
+    const opl=rnd(-6,6);
+    const d=a*(b*opl+c);
+    const verg=`${a}(${b}<i>${letter}</i>${c>=0?' + '+c:' − '+Math.abs(c)}) = ${d}`;
+    const ab=a*b,ac=a*c;
+    const stap1H=stapRij(`${a}(${b}<i>${letter}</i>${c>=0?' + '+c:' − '+Math.abs(c)})`,`${d}`);
+    const stap2H=stapRij(lidHTML(new Br(ab),new Br(ac),letter),`${d}`,'Haakjes uitwerken');
+    const stap3H=stapRij(lidHTML(new Br(ab),new Br(ac),letter)+`<span class="markeer">${ac>0?' − '+ac:' + '+Math.abs(ac)}</span>`,`${d}<span class="markeer">${ac>0?' − '+ac:' + '+Math.abs(ac)}</span>`,'Trek getal af');
+    const stap4H=stapRij(`${ab}<i>${letter}</i>`,`${d-ac}`,'Vereenvoudig');
+    const stap5H=stapRij(`${ab}<i>${letter}</i><span class="markeer"> : ${ab}</span>`,`${d-ac}<span class="markeer"> : ${ab}</span>`,'Deel door '+ab);
+    const stap6H=stapRij('<i>'+letter+'</i>',brHTML(new Br(opl)),'Oplossing');
+    return{verg,opl:new Br(opl),letter,uitw:stap1H+stap2H+stap3H+stap4H+stap5H+stap6H};
+  }
+  if(sub===2){
+    // a(bx + c) = ex + f  →  haakje links, gewone term rechts
+    const a=rndNulvrij(-4,4);
+    const b=rndNulvrij(-5,5);
+    const c=rndNulvrij(-8,8);
+    const e=rndNulvrij(-5,5);
+    const opl=rnd(-6,6);
+    const f=a*(b*opl+c)-e*opl;
+    const ab=a*b,ac=a*c;
+    const lH=`${a}(${b<0?'−'+Math.abs(b):b}<i>${letter}</i>${c>=0?' + '+c:' − '+Math.abs(c)})`;
+    const rH=lidHTML(new Br(e),new Br(f),letter);
+    const na1=lidHTML(new Br(ab),new Br(ac),letter);
+    const nLo=new Br(ab-e),nRg=new Br(f-ac);
+    const stap1=stapRij(lH,rH);
+    const stap2=stapRij(na1,rH,'Haakjes uitwerken');
+    const stap3=stapRij(na1+`<span class="markeer">${e>0?' − '+e+'<i>'+letter+'</i>':' + '+Math.abs(e)+'<i>'+letter+'</i>'}</span>`+`<span class="markeer">${ac>0?' − '+ac:' + '+Math.abs(ac)}</span>`,rH+`<span class="markeer">${e>0?' − '+e+'<i>'+letter+'</i>':' + '+Math.abs(e)+'<i>'+letter+'</i>'}</span>`+`<span class="markeer">${ac>0?' − '+ac:' + '+Math.abs(ac)}</span>`,'Termen samenvoegen');
+    const stap4=stapRij(lidHTML(nLo,new Br(0),letter),brHTML(nRg),'Vereenvoudig');
+    const stap5=stapRij(lidHTML(nLo,new Br(0),letter)+`<span class="markeer"> : ${nLo.t}</span>`,brHTML(nRg)+`<span class="markeer"> : ${nLo.t}</span>`,'Deel door '+nLo.t);
+    const stap6=stapRij('<i>'+letter+'</i>',brHTML(new Br(opl)),'Oplossing');
+    return{verg:lH+' = '+rH,opl:new Br(opl),letter,uitw:stap1+stap2+stap3+stap4+stap5+stap6};
+  }
+  // sub===3: a(bx+c) = d(ex+f)  →  twee haakjes
+  {
+    const a=rndNulvrij(-4,4),b=rndNulvrij(-4,4),c=rndNulvrij(-6,6);
+    const d=rndNulvrij(-4,4),e=rndNulvrij(-4,4),f=rndNulvrij(-6,6);
+    const nLo=new Br(a*b-d*e);
+    if(nLo.isNul())return genC();
+    const opl=rnd(-6,6);
+    const ac=a*c,df=d*f;
+    const ab=a*b,de=d*e;
+    const lH=`${a}(${b<0?'−'+Math.abs(b):b}<i>${letter}</i>${c>=0?' + '+c:' − '+Math.abs(c)})`;
+    const rH=`${d}(${e<0?'−'+Math.abs(e):e}<i>${letter}</i>${f>=0?' + '+f:' − '+Math.abs(f)})`;
+    const na1=lidHTML(new Br(ab),new Br(ac),letter);
+    const na2=lidHTML(new Br(de),new Br(df),letter);
+    const nRg=new Br(df-ac);
+    const stap1=stapRij(lH,rH);
+    const stap2=stapRij(na1,na2,'Haakjes uitwerken (beide kanten)');
+    const stap3=stapRij(na1,na2,'Termen samenvoegen');
+    const stap4=stapRij(lidHTML(nLo,new Br(0),letter),brHTML(nRg),'Vereenvoudig');
+    const stap5=stapRij(lidHTML(nLo,new Br(0),letter)+`<span class="markeer"> : ${nLo.t}</span>`,brHTML(nRg)+`<span class="markeer"> : ${nLo.t}</span>`,'Deel door '+nLo.t);
+    const stap6=stapRij('<i>'+letter+'</i>',brHTML(new Br(opl)),'Oplossing');
+    return{verg:lH+' = '+rH,opl:new Br(opl),letter,uitw:stap1+stap2+stap3+stap4+stap5+stap6};
+  }
+}
+
+function genereer(reeks){
+  if(reeks==='A')return genA();
+  if(reeks==='B')return genB();
+  return genC();
+}
+
+// ══ STATE ══
+let staat={naam:'',reeks:null,punten:0,huidig:null};
+
+// ══ LOGIN ══
+document.getElementById('inp-naam').addEventListener('keydown',e=>{if(e.key==='Enter')login();});
+async function login(){
+  const naam=document.getElementById('inp-naam').value.trim();
+  if(!naam){document.getElementById('login-fout').style.display='block';return;}
+  staat.naam=naam;
+  document.getElementById('groep-naam').textContent=naam;
+  // Laad eventuele override + score
+  try{
+    const [sRes,gRes]=await Promise.all([
+      fetch(`${SCRIPT_URL}?action=score&naam=${encodeURIComponent(naam)}`),
+      fetch(`${SCRIPT_URL}?action=groep&naam=${encodeURIComponent(naam)}`)
+    ]);
+    const sData=await sRes.json();
+    const gData=await gRes.json();
+    staat.punten=sData.punten||0;
+    if(gData.groep){
+      ['A','B','C'].forEach(g=>{
+        const k=document.getElementById('kaart-'+g);
+        if(g!==gData.groep){k.style.opacity='.4';k.style.pointerEvents='none';}
+      });
+      document.getElementById('override-melding').style.display='block';
+      document.getElementById('override-melding').textContent=
+        `De leerkracht heeft jou ingedeeld in reeks ${gData.groep}.`;
+      kiesGroep(gData.groep);
+    }
+  }catch(e){}
+  toonScherm('s-groep');
+}
+
+// ══ GROEPSKEUZE ══
+let gekozenReeks=null;
+function kiesGroep(g){
+  gekozenReeks=g;
+  ['A','B','C'].forEach(x=>document.getElementById('kaart-'+x).className='groep-kaart');
+  document.getElementById('kaart-'+g).classList.add('sel-'+g);
+  document.getElementById('btn-start-lbl').textContent=g;
+  document.getElementById('btn-start').style.display='block';
+}
+function startOefening(){
+  if(!gekozenReeks)return;
+  staat.reeks=gekozenReeks;
+  document.getElementById('oef-naam-lbl').textContent=staat.naam;
+  document.getElementById('oef-reeks-lbl').textContent=staat.reeks;
+  document.getElementById('score-lbl').textContent=staat.punten;
+  toonScherm('s-oef');
+  laadVolgende();
+  startVoortgangPoll();
+}
+function wisselReeks(){toonScherm('s-groep');}
+
+// ══ OEFENING ══
+function laadVolgende(){
+  staat.huidig=genereer(staat.reeks);
+  const {verg,letter}=staat.huidig;
+  const typeLabel={A:'Vergelijking oplossen · 2 punten',B:'Vergelijking met breuken · 4 punten',C:'Vergelijking met haakjes · 10 punten'};
+  document.getElementById('oef-type-lbl').textContent=typeLabel[staat.reeks];
+  document.getElementById('verg-display').innerHTML=verg+' = ?';
+  // Eigenlijk toon de vergelijking zonder = ?, al staat die in verg
+  document.getElementById('verg-display').innerHTML=verg;
+  document.getElementById('var-lbl').textContent=letter;
+  document.getElementById('antwoord-inp').value='';
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('feedback').textContent='';
+  document.getElementById('uitwerking').style.display='none';
+  document.getElementById('uitwerking-inhoud').innerHTML='';
+  document.getElementById('btn-volgende').style.display='none';
+  document.getElementById('antwoord-inp').focus();
+}
+
+async function controleer(){
+  const ing=document.getElementById('antwoord-inp').value.trim();
+  if(!ing)return;
+  const {opl,letter}=staat.huidig;
+  const res=controleerAntwoord(ing,opl);
+  const fb=document.getElementById('feedback');
+  const uitw=document.getElementById('uitwerking');
+  const uitwInh=document.getElementById('uitwerking-inhoud');
+
+  // Toon altijd uitwerking
+  uitwInh.innerHTML=staat.huidig.uitw;
+  uitw.style.display='block';
+  document.getElementById('btn-volgende').style.display='block';
+
+  if(res.ok){
+    fb.className='feedback ok';
+    const punten=PUNTEN[staat.reeks];
+    fb.textContent=`✓ Correct! +${punten} punt${punten>1?'en':''}`;
+    staat.punten+=punten;
+    document.getElementById('score-lbl').textContent=staat.punten;
+    animeerScore();
+    // Stuur naar Sheets
+    try{
+      await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({
+        action:'antwoord',naam:staat.naam,groep:staat.reeks,
+        oefening:`${staat.reeks}_${Date.now()}`,juist:true,punten
+      })});
+    }catch(e){}
+  }else{
+    fb.className='feedback nok';
+    if(res.reden==='decimaal_repeterend'){
+      fb.innerHTML=`✗ Decimale notatie is hier niet aanvaard — de uitkomst is een repeterende breuk. Schrijf het als breuk: <strong>${brHTML(opl)}</strong>`;
+    }else if(res.reden==='parse'){
+      fb.textContent='✗ Ongeldige invoer. Typ bv. 3/4 of -5 of 0,25.';
+    }else{
+      fb.textContent='✗ Niet juist. Bekijk de uitwerking.';
+    }
+    try{
+      await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({
+        action:'antwoord',naam:staat.naam,groep:staat.reeks,
+        oefening:`${staat.reeks}_${Date.now()}`,juist:false,punten:0
+      })});
+    }catch(e){}
+  }
+  document.getElementById('antwoord-inp').disabled=true;
+}
+
+function volgende(){
+  document.getElementById('antwoord-inp').disabled=false;
+  laadVolgende();
+}
+
+function animeerScore(){
+  const el=document.querySelector('.score-pil');
+  el.style.transform='scale(1.3)';el.style.transition='transform .15s';
+  setTimeout(()=>{el.style.transform='scale(1)';},220);
+}
+
+// ══ VOORTGANG POLL ══
+let pollTimer=null;
+function startVoortgangPoll(){
+  updateVoortgang();
+  pollTimer=setInterval(updateVoortgang,8000);
+}
+async function updateVoortgang(){
+  try{
+    const res=await fetch(`${SCRIPT_URL}?action=klassikaal`);
+    const data=await res.json();
+    const pct=data.voortgang||0;
+    document.getElementById('voortgang-fill').style.width=pct+'%';
+    document.getElementById('voortgang-pct-lbl').textContent=pct+'%';
+  }catch(e){}
+}
+
+// ══ SCHERM WISSELEN ══
+function toonScherm(id){
+  document.querySelectorAll('.scherm').forEach(s=>s.classList.remove('actief'));
+  document.getElementById(id).classList.add('actief');
+}
+</script>
+</body>
+</html>
