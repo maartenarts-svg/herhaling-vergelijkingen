@@ -81,9 +81,28 @@ input:focus{border-color:var(--accent);}
 
 /* ── Antwoord invoer ── */
 .antwoord-zone{display:flex;gap:.6rem;align-items:stretch;}
-.antwoord-zone input{flex:1;font-family:'JetBrains Mono',monospace;font-size:1.1rem;
-  font-weight:700;text-align:center;}
-.antwoord-zone .btn{width:auto;padding:.75rem 1.25rem;}
+.antwoord-zone .btn{width:auto;padding:.75rem 1.25rem;flex-shrink:0;}
+/* ── Breuk-invoer widget ── */
+.frac-host{
+  flex:1;display:inline-flex;align-items:center;flex-wrap:nowrap;cursor:text;
+  padding:.75rem 1rem;border:2px solid var(--border);border-radius:9px;
+  background:var(--surface2);font-family:'JetBrains Mono',monospace;
+  font-size:1.1rem;font-weight:700;color:var(--text);
+  transition:border-color .2s;min-width:0;
+}
+.frac-host:focus-within{border-color:var(--accent);}
+.fi-txt{
+  outline:none;border:none;background:transparent;
+  font-family:inherit;font-size:inherit;font-weight:inherit;color:inherit;
+  padding:0;line-height:1;min-width:8px;
+}
+.fi-frac{display:inline-flex;flex-direction:column;align-items:center;margin:0 3px;vertical-align:middle;}
+.fi-frac input{
+  outline:none;border:none;background:transparent;
+  font-family:inherit;font-size:.85em;font-weight:inherit;
+  text-align:center;padding:0;line-height:1.4;color:inherit;min-width:12px;
+}
+.fi-lijn{height:2px;background:currentColor;min-width:16px;}
 
 /* ── Feedback ── */
 .feedback{border-radius:9px;padding:.8rem 1rem;font-size:.9rem;font-weight:600;
@@ -125,7 +144,7 @@ input:focus{border-color:var(--accent);}
 <body>
 
 <script>
-const SCRIPT_URL = "JOUW_APPS_SCRIPT_URL_HIER";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzI2xZ1lsJmwcPpIq92fKdBkvaPQ5J62796V9kWua9F8X1gcmehC0vrRWzsnFCCZmvK/exec";
 const PUNTEN = {A:2, B:4, C:10};
 </script>
 
@@ -215,11 +234,10 @@ const PUNTEN = {A:2, B:4, C:10};
         <i id="var-lbl">x</i> =
       </div>
       <div class="antwoord-zone">
-        <input type="text" id="antwoord-inp" placeholder="?" autocomplete="off"
-          onkeydown="if(event.key==='Enter')controleer()"/>
+        <div class="frac-host" id="antwoord-fw"></div>
         <button class="btn btn-primary" onclick="controleer()">✓</button>
       </div>
-      <p class="hint">Breuk: typ bv. 3/4 of -5/2</p>
+      <p class="hint">Tik / om een breukstreep in te voegen</p>
       <div class="feedback" id="feedback"></div>
       <div class="uitwerking" id="uitwerking" style="display:none;">
         <div class="uitwerking-titel">Uitwerking</div>
@@ -233,6 +251,108 @@ const PUNTEN = {A:2, B:4, C:10};
 </div>
 
 <script>
+// ══ BREUK-INVOER WIDGET ══
+const _fiRuler=document.createElement('span');
+_fiRuler.setAttribute('aria-hidden','true');
+Object.assign(_fiRuler.style,{position:'fixed',top:'-9999px',left:'-9999px',
+  visibility:'hidden',whiteSpace:'nowrap',pointerEvents:'none',
+  fontFamily:"'JetBrains Mono',monospace",fontWeight:'700'});
+document.body.appendChild(_fiRuler);
+function _fiBr(val,fs){_fiRuler.style.fontSize=fs;_fiRuler.textContent=val||'';return Math.max(8,_fiRuler.offsetWidth+4);}
+const _frRegs={};
+function getFracVal(id){return _frRegs[id]?_frRegs[id].getVal():'';}
+function clearFracWidget(id){if(_frRegs[id])_frRegs[id].clear();}
+function focusFracWidget(id){if(_frRegs[id])_frRegs[id].focus();}
+
+function initFracWidget(hostId,regId,opts={}){
+  const host=document.getElementById(hostId);if(!host)return;
+  const fs=window.getComputedStyle(host).fontSize||'1rem';
+  function bw(v){return _fiBr(v,fs);}
+  const seg=[];
+  function leesWaarde(){return seg.map(s=>s.type==='txt'?s.el.value:`${s.tIn.value}/${s.nIn.value}`).join('');}
+  function inserNa(n,r){if(r.nextSibling)host.insertBefore(n,r.nextSibling);else host.appendChild(n);}
+  function _extTeller(tekst){
+    let opIdx=-1,opChar='';
+    for(let i=tekst.length-1;i>=0;i--){if('+-'.includes(tekst[i])){opIdx=i;opChar=tekst[i];break;}}
+    if(opIdx===-1)return{prefix:'',teller:tekst};
+    const voor=tekst.slice(0,opIdx).trimEnd();
+    if(voor.length>0&&/[a-zA-Z0-9]$/.test(voor))return{prefix:tekst.slice(0,opIdx+1),teller:tekst.slice(opIdx+1)};
+    return{prefix:tekst.slice(0,opIdx),teller:tekst.slice(opIdx)};
+  }
+  function maakTxt(iv){
+    const el=document.createElement('input');
+    el.type='text';el.className='fi-txt';el.value=iv||'';
+    el.style.width=bw(el.value||'0')+'px';
+    el.addEventListener('input',()=>{el.style.width=bw(el.value||'0')+'px';});
+    el.addEventListener('keydown',e=>{
+      const pos=el.selectionStart,idx=seg.indexOf(s);
+      if(e.key==='/'){
+        e.preventDefault();
+        const voor=el.value.slice(0,pos),achter=el.value.slice(pos);
+        const{prefix,teller}=_extTeller(voor);
+        el.value=prefix;el.style.width=bw(prefix||'0')+'px';
+        const fSeg=maakFrac(teller),aSeg=maakTxt(achter);
+        seg.splice(idx+1,0,fSeg,aSeg);inserNa(fSeg.el,el);inserNa(aSeg.el,fSeg.el);
+        teller?fSeg.nIn.focus():fSeg.tIn.focus();return;
+      }
+      if(e.key==='Backspace'&&pos===0&&el.value===''){
+        if(idx>0&&seg[idx-1].type==='frac'){e.preventDefault();verwijderFrac(seg[idx-1],s);}
+      }
+      if(e.key==='Enter'){e.preventDefault();if(opts.onEnter)opts.onEnter();}
+    });
+    const s={type:'txt',el};return s;
+  }
+  function maakFrac(tv){
+    const el=document.createElement('span');el.className='fi-frac';
+    const tIn=document.createElement('input');tIn.type='text';tIn.value=tv||'';
+    const lijn=document.createElement('div');lijn.className='fi-lijn';
+    const nIn=document.createElement('input');nIn.type='text';nIn.value='';
+    el.appendChild(tIn);el.appendChild(lijn);el.appendChild(nIn);
+    function updBr(){
+      const tw=bw(tIn.value||'0'),nw=bw(nIn.value||'0');
+      tIn.style.width=tw+'px';nIn.style.width=nw+'px';
+      lijn.style.width=Math.max(tw,nw)+'px';
+    }
+    updBr();tIn.addEventListener('input',updBr);nIn.addEventListener('input',updBr);
+    tIn.addEventListener('keydown',e=>{
+      const pos=tIn.selectionStart,idx=seg.indexOf(s);
+      if(e.key==='/'){e.preventDefault();nIn.focus();return;}
+      if(e.key==='ArrowRight'&&pos===tIn.value.length){e.preventDefault();nIn.focus();nIn.setSelectionRange(0,0);return;}
+      if(e.key==='Backspace'&&tIn.value===''){e.preventDefault();verwijderFrac(s,idx<seg.length-1?seg[idx+1]:null);}
+      if(e.key==='Enter'){e.preventDefault();if(opts.onEnter)opts.onEnter();}
+    });
+    nIn.addEventListener('keydown',e=>{
+      const pos=nIn.selectionStart,idx=seg.indexOf(s);
+      if(e.key==='ArrowLeft'&&pos===0){e.preventDefault();tIn.focus();tIn.setSelectionRange(tIn.value.length,tIn.value.length);return;}
+      if(e.key==='ArrowRight'&&pos===nIn.value.length){
+        if(idx<seg.length-1&&seg[idx+1].type==='txt'){e.preventDefault();seg[idx+1].el.focus();seg[idx+1].el.setSelectionRange(0,0);}return;
+      }
+      if(e.key==='Backspace'&&nIn.value===''){e.preventDefault();tIn.focus();tIn.setSelectionRange(tIn.value.length,tIn.value.length);}
+      if(e.key==='Enter'){e.preventDefault();if(opts.onEnter)opts.onEnter();}
+    });
+    const s={type:'frac',el,tIn,nIn};return s;
+  }
+  function verwijderFrac(fSeg,naSeg){
+    const idx=seg.indexOf(fSeg);if(idx<0)return;
+    const vSeg=(idx>0&&seg[idx-1].type==='txt')?seg[idx-1]:null;
+    const aSeg=naSeg||(idx<seg.length-1&&seg[idx+1].type==='txt'?seg[idx+1]:null);
+    const curPos=vSeg?vSeg.el.value.length:0;
+    if(vSeg&&aSeg){vSeg.el.value+=aSeg.el.value;vSeg.el.style.width=bw(vSeg.el.value||'0')+'px';seg.splice(idx,2);host.removeChild(fSeg.el);host.removeChild(aSeg.el);}
+    else{seg.splice(idx,1);host.removeChild(fSeg.el);}
+    if(vSeg){vSeg.el.focus();vSeg.el.setSelectionRange(curPos,curPos);}
+  }
+  host.addEventListener('click',e=>{
+    if(e.target===host){const l=[...seg].reverse().find(s=>s.type==='txt');if(l){l.el.focus();l.el.setSelectionRange(l.el.value.length,l.el.value.length);}}
+  });
+  function clear(){
+    while(host.firstChild)host.removeChild(host.firstChild);
+    seg.length=0;const b=maakTxt('');seg.push(b);host.appendChild(b.el);
+  }
+  function focusWidget(){const l=seg.find(s=>s.type==='txt');if(l){l.el.focus();}}
+  const begin=maakTxt('');seg.push(begin);host.appendChild(begin.el);
+  _frRegs[regId]={getVal:leesWaarde,clear,focus:focusWidget};
+}
+
 // ══ BREUK KLASSE ══
 function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b];}return a||1;}
 class Br{
@@ -471,27 +591,54 @@ function genB(){
   }
 }
 
+// Hulp: coëfficiënt weergave voor haakjes (1 en -1 weggelaten)
+function coefStr(a){
+  if(a===1)return'';
+  if(a===-1)return'−';
+  return a<0?'−'+Math.abs(a):''+a;
+}
+// Inhoud van haakje: bx + c
+function haakjesInhoud(b,c,letter){
+  let h='';
+  // b-term
+  if(b===1)h+=`<i>${letter}</i>`;
+  else if(b===-1)h+=`−<i>${letter}</i>`;
+  else h+=`${b}<i>${letter}</i>`;
+  // c-term
+  if(c>0)h+=` + ${c}`;
+  else if(c<0)h+=` − ${Math.abs(c)}`;
+  return h;
+}
+// Volledige haakjesterm: a(bx+c)
+function haakjesTerm(a,b,c,letter){
+  return`${coefStr(a)}(${haakjesInhoud(b,c,letter)})`;
+}
+
 // Reeks C: haakjes, gehele coëfficiënten
 function genC(){
   const sub=rnd(1,3);
   const letter=rndNietNul(['x','y','t','n']);
 
   if(sub===1){
-    // a(bx + c) = d  →  één haakje links
+    // a(bx + c) = d  →  één haakje links, getal rechts
     const a=rndNulvrij(-4,4);
     const b=rndNulvrij(-5,5);
     const c=rndNulvrij(-8,8);
-    const opl=rnd(-6,6);
+    const opl=rndNulvrij(-6,6);
     const d=a*(b*opl+c);
-    const verg=`${a}(${b}<i>${letter}</i>${c>=0?' + '+c:' − '+Math.abs(c)}) = ${d}`;
+    if(b===0)return genC();
     const ab=a*b,ac=a*c;
-    const stap1H=stapRij(`${a}(${b}<i>${letter}</i>${c>=0?' + '+c:' − '+Math.abs(c)})`,`${d}`);
-    const stap2H=stapRij(lidHTML(new Br(ab),new Br(ac),letter),`${d}`,'Werk de haakjes weg.');
-    const stap3H=stapRij(lidHTML(new Br(ab),new Br(ac),letter)+`<span class="markeer">${ac>0?' − '+ac:' + '+Math.abs(ac)}</span>`,`${d}<span class="markeer">${ac>0?' − '+ac:' + '+Math.abs(ac)}</span>`,'Werk de termen zonder onbekende weg uit het andere lid.');
-    const stap4H=stapRij(`${ab}<i>${letter}</i>`,`${d-ac}`,'Herleid beide leden.');
-    const stap5H=stapRij(`${ab}<i>${letter}</i><span class="markeer"> : ${ab}</span>`,`${d-ac}<span class="markeer"> : ${ab}</span>`,'Werk de factor weg.');
-    const stap6H=stapRij('<i>'+letter+'</i>',brHTML(new Br(opl)),'Herleid.');
-    return{verg,opl:new Br(opl),letter,uitw:stap1H+stap2H+stap3H+stap4H+stap5H+stap6H};
+    const lH=haakjesTerm(a,b,c,letter);
+    const rH=''+d;
+    const na=lidHTML(new Br(ab),new Br(ac),letter);
+    const stap1=stapRij(lH,rH);
+    const stap2=stapRij(na,rH,'Werk de haakjes weg.');
+    const markeerAc=ac>0?` − ${ac}`:` + ${Math.abs(ac)}`;
+    const stap3=stapRij(na+`<span class="markeer">${markeerAc}</span>`,rH+`<span class="markeer">${markeerAc}</span>`,'Werk de termen zonder onbekende weg uit het andere lid.');
+    const stap4=stapRij(lidHTML(new Br(ab),new Br(0),letter),brHTML(new Br(d-ac)),'Herleid beide leden.');
+    const stap5=stapRij(lidHTML(new Br(ab),new Br(0),letter)+`<span class="markeer"> : ${ab}</span>`,brHTML(new Br(d-ac))+`<span class="markeer"> : ${ab}</span>`,'Werk de factor weg.');
+    const stap6=stapRij('<i>'+letter+'</i>',brHTML(new Br(opl)),'Herleid.');
+    return{verg:lH+' = '+rH,opl:new Br(opl),letter,uitw:stap1+stap2+stap3+stap4+stap5+stap6};
   }
   if(sub===2){
     // a(bx + c) = ex + f  →  haakje links, gewone term rechts
@@ -499,16 +646,23 @@ function genC(){
     const b=rndNulvrij(-5,5);
     const c=rndNulvrij(-8,8);
     const e=rndNulvrij(-5,5);
-    const opl=rnd(-6,6);
-    const f=a*(b*opl+c)-e*opl;
+    const opl=rndNulvrij(-6,6);
     const ab=a*b,ac=a*c;
-    const lH=`${a}(${b<0?'−'+Math.abs(b):b}<i>${letter}</i>${c>=0?' + '+c:' − '+Math.abs(c)})`;
+    if(ab===e)return genC(); // zou nLo=0 geven
+    const f=ab*opl+ac-e*opl; // zodat opl klopt: ab*opl+ac = e*opl+f
+    const nLo=new Br(ab-e),nRg=new Br(f-ac);
+    const lH=haakjesTerm(a,b,c,letter);
     const rH=lidHTML(new Br(e),new Br(f),letter);
     const na1=lidHTML(new Br(ab),new Br(ac),letter);
-    const nLo=new Br(ab-e),nRg=new Br(f-ac);
+    const markeerOnb=e>0?` − ${e}<i>${letter}</i>`:` + ${Math.abs(e)}<i>${letter}</i>`;
+    const markeerGet=ac>0?` − ${ac}`:` + ${Math.abs(ac)}`;
     const stap1=stapRij(lH,rH);
     const stap2=stapRij(na1,rH,'Werk de haakjes weg.');
-    const stap3=stapRij(na1+`<span class="markeer">${e>0?' − '+e+'<i>'+letter+'</i>':' + '+Math.abs(e)+'<i>'+letter+'</i>'}</span>`+`<span class="markeer">${ac>0?' − '+ac:' + '+Math.abs(ac)}</span>`,rH+`<span class="markeer">${e>0?' − '+e+'<i>'+letter+'</i>':' + '+Math.abs(e)+'<i>'+letter+'</i>'}</span>`+`<span class="markeer">${ac>0?' − '+ac:' + '+Math.abs(ac)}</span>`,'Werk de termen met een onbekende weg uit het ene lid. Werk de termen zonder onbekende weg uit het andere lid.');
+    const stap3=stapRij(
+      na1+`<span class="markeer">${markeerOnb}</span>`+`<span class="markeer">${markeerGet}</span>`,
+      rH+`<span class="markeer">${markeerOnb}</span>`+`<span class="markeer">${markeerGet}</span>`,
+      'Werk de termen met een onbekende weg uit het ene lid. Werk de termen zonder onbekende weg uit het andere lid.'
+    );
     const stap4=stapRij(lidHTML(nLo,new Br(0),letter),brHTML(nRg),'Herleid beide leden.');
     const stap5=stapRij(lidHTML(nLo,new Br(0),letter)+`<span class="markeer"> : ${nLo.t}</span>`,brHTML(nRg)+`<span class="markeer"> : ${nLo.t}</span>`,'Werk de factor weg.');
     const stap6=stapRij('<i>'+letter+'</i>',brHTML(new Br(opl)),'Herleid.');
@@ -517,20 +671,32 @@ function genC(){
   // sub===3: a(bx+c) = d(ex+f)  →  twee haakjes
   {
     const a=rndNulvrij(-4,4),b=rndNulvrij(-4,4),c=rndNulvrij(-6,6);
-    const d=rndNulvrij(-4,4),e=rndNulvrij(-4,4),f=rndNulvrij(-6,6);
-    const nLo=new Br(a*b-d*e);
-    if(nLo.isNul())return genC();
-    const opl=rnd(-6,6);
-    const ac=a*c,df=d*f;
+    const d=rndNulvrij(-4,4),e=rndNulvrij(-4,4);
     const ab=a*b,de=d*e;
-    const lH=`${a}(${b<0?'−'+Math.abs(b):b}<i>${letter}</i>${c>=0?' + '+c:' − '+Math.abs(c)})`;
-    const rH=`${d}(${e<0?'−'+Math.abs(e):e}<i>${letter}</i>${f>=0?' + '+f:' − '+Math.abs(f)})`;
+    if(ab===de)return genC();
+    const opl=rndNulvrij(-6,6);
+    const ac=a*c;
+    // Bereken f zodat opl klopt: ab*opl+ac = de*opl+df  →  df = ab*opl+ac-de*opl
+    const df=ab*opl+ac-de*opl;
+    // f moet geheel zijn
+    if(de===0)return genC();
+    const f=df/d; // d*f = df, maar f moet integer zijn
+    // Controleer of f geheel is
+    if(!Number.isInteger(f))return genC();
+    const nLo=new Br(ab-de),nRg=new Br(df-ac);
+    const lH=haakjesTerm(a,b,c,letter);
+    const rH=haakjesTerm(d,e,f,letter);
     const na1=lidHTML(new Br(ab),new Br(ac),letter);
     const na2=lidHTML(new Br(de),new Br(df),letter);
-    const nRg=new Br(df-ac);
+    const markeerOnb=de>0?` − ${de}<i>${letter}</i>`:` + ${Math.abs(de)}<i>${letter}</i>`;
+    const markeerGet=ac>0?` − ${ac}`:` + ${Math.abs(ac)}`;
     const stap1=stapRij(lH,rH);
     const stap2=stapRij(na1,na2,'Werk de haakjes weg.');
-    const stap3=stapRij(na1,na2,'Werk de termen met een onbekende weg uit het ene lid. Werk de termen zonder onbekende weg uit het andere lid.');
+    const stap3=stapRij(
+      na1+`<span class="markeer">${markeerOnb}</span>`+`<span class="markeer">${markeerGet}</span>`,
+      na2+`<span class="markeer">${markeerOnb}</span>`+`<span class="markeer">${markeerGet}</span>`,
+      'Werk de termen met een onbekende weg uit het ene lid. Werk de termen zonder onbekende weg uit het andere lid.'
+    );
     const stap4=stapRij(lidHTML(nLo,new Br(0),letter),brHTML(nRg),'Herleid beide leden.');
     const stap5=stapRij(lidHTML(nLo,new Br(0),letter)+`<span class="markeer"> : ${nLo.t}</span>`,brHTML(nRg)+`<span class="markeer"> : ${nLo.t}</span>`,'Werk de factor weg.');
     const stap6=stapRij('<i>'+letter+'</i>',brHTML(new Br(opl)),'Herleid.');
@@ -548,6 +714,7 @@ function genereer(reeks){
 let staat={naam:'',reeks:null,punten:0,huidig:null};
 
 // ══ LOGIN ══
+window.addEventListener('load', initWidgets);
 document.getElementById('inp-naam').addEventListener('keydown',e=>{if(e.key==='Enter')login();});
 async function login(){
   const naam=document.getElementById('inp-naam').value.trim();
@@ -608,17 +775,17 @@ function laadVolgende(){
   // Eigenlijk toon de vergelijking zonder = ?, al staat die in verg
   document.getElementById('verg-display').innerHTML=verg;
   document.getElementById('var-lbl').textContent=letter;
-  document.getElementById('antwoord-inp').value='';
+  clearFracWidget('antwoord');
   document.getElementById('feedback').className='feedback';
   document.getElementById('feedback').textContent='';
   document.getElementById('uitwerking').style.display='none';
   document.getElementById('uitwerking-inhoud').innerHTML='';
   document.getElementById('btn-volgende').style.display='none';
-  document.getElementById('antwoord-inp').focus();
+  focusFracWidget('antwoord');
 }
 
 async function controleer(){
-  const ing=document.getElementById('antwoord-inp').value.trim();
+  const ing=getFracVal('antwoord').trim();
   if(!ing)return;
   const {opl,letter}=staat.huidig;
   const res=controleerAntwoord(ing,opl);
@@ -661,11 +828,11 @@ async function controleer(){
       })});
     }catch(e){}
   }
-  document.getElementById('antwoord-inp').disabled=true;
+  // antwoord geblokkeerd na controle
 }
 
 function volgende(){
-  document.getElementById('antwoord-inp').disabled=false;
+  clearFracWidget('antwoord');
   laadVolgende();
 }
 
@@ -689,6 +856,11 @@ async function updateVoortgang(){
     document.getElementById('voortgang-fill').style.width=pct+'%';
     document.getElementById('voortgang-pct-lbl').textContent=pct+'%';
   }catch(e){}
+}
+
+// ══ WIDGET INIT ══
+function initWidgets(){
+  initFracWidget('antwoord-fw','antwoord',{onEnter:controleer});
 }
 
 // ══ SCHERM WISSELEN ══
