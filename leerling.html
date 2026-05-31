@@ -31,12 +31,25 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .card-titel{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.75rem;}
 
 /* ── Inputs ── */
-input[type=text],input[type=number]{
+input[type=text]:not(.fi-txt),input[type=number]{
   width:100%;padding:.75rem 1rem;border:2px solid var(--border);border-radius:9px;
   font-family:'Nunito',sans-serif;font-size:1rem;color:var(--text);
   background:var(--surface2);outline:none;transition:border-color .2s;
 }
-input:focus{border-color:var(--accent);}
+input[type=text]:not(.fi-txt):focus,input[type=number]:focus{border-color:var(--accent);}
+
+/* ── Antwoord invoerveld (host voor breuk-widget) ── */
+.antwoord-veld{
+  flex:1;min-width:0;display:inline-flex;align-items:center;flex-wrap:nowrap;
+  cursor:text;padding:.75rem 1rem;border:2px solid var(--border);border-radius:9px;
+  background:var(--surface2);font-family:'JetBrains Mono',monospace;
+  font-size:1.1rem;font-weight:700;color:var(--text);transition:border-color .2s;
+}
+.antwoord-veld:focus-within{border-color:var(--accent);}
+.fi-txt{outline:none;border:none;background:transparent;font-family:inherit;font-size:inherit;font-weight:inherit;color:inherit;padding:0;line-height:1;}
+.fi-frac{display:inline-flex;flex-direction:column;align-items:center;margin:0 2px;vertical-align:middle;}
+.fi-frac input{outline:none;border:none;background:transparent;font-family:inherit;font-size:inherit;font-weight:inherit;text-align:center;padding:0;line-height:1.35;color:inherit;}
+.fi-lijn{height:1.5px;background:currentColor;min-width:16px;}
 
 /* ── Knoppen ── */
 .btn{padding:.75rem 1.25rem;border:none;border-radius:9px;font-family:'Nunito',sans-serif;
@@ -83,20 +96,21 @@ input:focus{border-color:var(--accent);}
 .antwoord-zone{display:flex;gap:.6rem;align-items:stretch;}
 .antwoord-zone .btn{width:auto;padding:.75rem 1.25rem;flex-shrink:0;}
 /* ── Breuk-invoer widget ── */
-.frac-host{
-  flex:1;display:inline-flex;align-items:center;flex-wrap:nowrap;cursor:text;
+.antwoord-veld{
+  flex:1;min-width:0;
   padding:.75rem 1rem;border:2px solid var(--border);border-radius:9px;
   background:var(--surface2);font-family:'JetBrains Mono',monospace;
   font-size:1.1rem;font-weight:700;color:var(--text);
-  transition:border-color .2s;min-width:0;
+  transition:border-color .2s;
+  display:inline-flex;align-items:center;flex-wrap:nowrap;cursor:text;
 }
-.frac-host:focus-within{border-color:var(--accent);}
+.antwoord-veld:focus-within{border-color:var(--accent);}
 .fi-txt{
   outline:none;border:none;background:transparent;
   font-family:inherit;font-size:inherit;font-weight:inherit;color:inherit;
-  padding:0;line-height:1;min-width:8px;
+  padding:0;line-height:1;width:4px;min-width:4px;
 }
-.fi-frac{display:inline-flex;flex-direction:column;align-items:center;margin:0 3px;vertical-align:middle;}
+.fi-frac{display:inline-flex;flex-direction:column;align-items:center;margin:0 2px;vertical-align:middle;}
 .fi-frac input{
   outline:none;border:none;background:transparent;
   font-family:inherit;font-size:.85em;font-weight:inherit;
@@ -234,7 +248,7 @@ const PUNTEN = {A:2, B:4, C:10};
         <i id="var-lbl">x</i> =
       </div>
       <div class="antwoord-zone">
-        <div class="frac-host" id="antwoord-fw"></div>
+        <div class="antwoord-veld" id="antwoord-fw" style="min-width:0;"></div>
         <button class="btn btn-primary" onclick="controleer()">✓</button>
       </div>
       <p class="hint">Tik / om een breukstreep in te voegen</p>
@@ -252,6 +266,7 @@ const PUNTEN = {A:2, B:4, C:10};
 
 <script>
 // ══ BREUK-INVOER WIDGET ══
+const _fr={};
 const _fiRuler=document.createElement('span');
 _fiRuler.setAttribute('aria-hidden','true');
 Object.assign(_fiRuler.style,{position:'fixed',top:'-9999px',left:'-9999px',
@@ -259,45 +274,49 @@ Object.assign(_fiRuler.style,{position:'fixed',top:'-9999px',left:'-9999px',
   fontFamily:"'JetBrains Mono',monospace",fontWeight:'700'});
 document.body.appendChild(_fiRuler);
 function _fiBr(val,fs){_fiRuler.style.fontSize=fs;_fiRuler.textContent=val||'';return Math.max(8,_fiRuler.offsetWidth+4);}
-const _frRegs={};
-function getFracVal(id){return _frRegs[id]?_frRegs[id].getVal():'';}
-function clearFracWidget(id){if(_frRegs[id])_frRegs[id].clear();}
-function focusFracWidget(id){if(_frRegs[id])_frRegs[id].focus();}
+function getFracVal(id){return _fr[id]?_fr[id].getVal():(document.getElementById(id)||{value:''}).value;}
+function clearFracWidget(id){if(_fr[id])_fr[id].clear();}
+function focusFracWidget(id){if(_fr[id])_fr[id].focusWidget();}
+
+function _extTeller(tekst,heeftVorig=false){
+  let opIdx=-1,opChar='';
+  for(let i=tekst.length-1;i>=0;i--){if('+-*·:='.includes(tekst[i])){opIdx=i;opChar=tekst[i];break;}}
+  if(opIdx===-1)return{prefix:'',teller:tekst};
+  if(opChar==='+'||opChar==='*'||opChar==='·'||opChar===':'||opChar==='=')return{prefix:tekst.slice(0,opIdx+1),teller:tekst.slice(opIdx+1)};
+  const voor=tekst.slice(0,opIdx).trimEnd();
+  if(voor.length>0&&/[a-zA-Z0-9]$/.test(voor))return{prefix:tekst.slice(0,opIdx+1),teller:tekst.slice(opIdx+1)};
+  if(heeftVorig&&opIdx===0)return{prefix:tekst.slice(0,1),teller:tekst.slice(1)};
+  return{prefix:tekst.slice(0,opIdx),teller:tekst.slice(opIdx)};
+}
 
 function initFracWidget(hostId,regId,opts={}){
   const host=document.getElementById(hostId);if(!host)return;
   const fs=window.getComputedStyle(host).fontSize||'1rem';
-  function bw(v){return _fiBr(v,fs);}
+  function br(v){return _fiBr(v,fs);}
   const seg=[];
   function leesWaarde(){return seg.map(s=>s.type==='txt'?s.el.value:`${s.tIn.value}/${s.nIn.value}`).join('');}
+  function wijzigd(){if(opts.onChange)opts.onChange();}
   function inserNa(n,r){if(r.nextSibling)host.insertBefore(n,r.nextSibling);else host.appendChild(n);}
-  function _extTeller(tekst){
-    let opIdx=-1,opChar='';
-    for(let i=tekst.length-1;i>=0;i--){if('+-'.includes(tekst[i])){opIdx=i;opChar=tekst[i];break;}}
-    if(opIdx===-1)return{prefix:'',teller:tekst};
-    const voor=tekst.slice(0,opIdx).trimEnd();
-    if(voor.length>0&&/[a-zA-Z0-9]$/.test(voor))return{prefix:tekst.slice(0,opIdx+1),teller:tekst.slice(opIdx+1)};
-    return{prefix:tekst.slice(0,opIdx),teller:tekst.slice(opIdx)};
-  }
   function maakTxt(iv){
     const el=document.createElement('input');
     el.type='text';el.className='fi-txt';el.value=iv||'';
-    el.style.width=bw(el.value||'0')+'px';
-    el.addEventListener('input',()=>{el.style.width=bw(el.value||'0')+'px';});
+    el.style.width=br(el.value)+'px';
+    el.addEventListener('input',()=>{el.style.width=br(el.value)+'px';wijzigd();});
     el.addEventListener('keydown',e=>{
       const pos=el.selectionStart,idx=seg.indexOf(s);
+      if(e.key==='*'){e.preventDefault();const p=pos,v=el.value;el.value=v.slice(0,p)+'·'+v.slice(el.selectionEnd);el.setSelectionRange(p+1,p+1);el.style.width=br(el.value)+'px';wijzigd();return;}
       if(e.key==='/'){
         e.preventDefault();
         const voor=el.value.slice(0,pos),achter=el.value.slice(pos);
-        const{prefix,teller}=_extTeller(voor);
-        el.value=prefix;el.style.width=bw(prefix||'0')+'px';
+        const{prefix,teller}=_extTeller(voor,idx>0);
+        el.value=prefix;el.style.width=br(prefix)+'px';
         const fSeg=maakFrac(teller),aSeg=maakTxt(achter);
         seg.splice(idx+1,0,fSeg,aSeg);inserNa(fSeg.el,el);inserNa(aSeg.el,fSeg.el);
-        teller?fSeg.nIn.focus():fSeg.tIn.focus();return;
+        teller?fSeg.nIn.focus():fSeg.tIn.focus();wijzigd();return;
       }
-      if(e.key==='Backspace'&&pos===0&&el.value===''){
-        if(idx>0&&seg[idx-1].type==='frac'){e.preventDefault();verwijderFrac(seg[idx-1],s);}
-      }
+      if(e.key==='ArrowLeft'&&pos===0&&el.selectionEnd===0){if(idx>0&&seg[idx-1].type==='frac'){e.preventDefault();const n=seg[idx-1].nIn;n.focus();n.setSelectionRange(n.value.length,n.value.length);}return;}
+      if(e.key==='ArrowRight'&&pos===el.value.length){if(idx<seg.length-1&&seg[idx+1].type==='frac'){e.preventDefault();const t=seg[idx+1].tIn;t.focus();t.setSelectionRange(0,0);}return;}
+      if(e.key==='Backspace'&&pos===0&&el.value===''){if(idx>0&&seg[idx-1].type==='frac'){e.preventDefault();verwijderFrac(seg[idx-1],s);}}
       if(e.key==='Enter'){e.preventDefault();if(opts.onEnter)opts.onEnter();}
     });
     const s={type:'txt',el};return s;
@@ -308,25 +327,25 @@ function initFracWidget(hostId,regId,opts={}){
     const lijn=document.createElement('div');lijn.className='fi-lijn';
     const nIn=document.createElement('input');nIn.type='text';nIn.value='';
     el.appendChild(tIn);el.appendChild(lijn);el.appendChild(nIn);
-    function updBr(){
-      const tw=bw(tIn.value||'0'),nw=bw(nIn.value||'0');
-      tIn.style.width=tw+'px';nIn.style.width=nw+'px';
-      lijn.style.width=Math.max(tw,nw)+'px';
-    }
+    function updBr(){const tw=br(tIn.value),nw=br(nIn.value);tIn.style.width=tw+'px';nIn.style.width=nw+'px';lijn.style.width=Math.max(tw,nw)+'px';wijzigd();}
     updBr();tIn.addEventListener('input',updBr);nIn.addEventListener('input',updBr);
+    function ster(inp,e){if(e.key!=='*')return false;e.preventDefault();const p=inp.selectionStart;inp.value=inp.value.slice(0,p)+'·'+inp.value.slice(inp.selectionEnd);inp.setSelectionRange(p+1,p+1);updBr();return true;}
     tIn.addEventListener('keydown',e=>{
       const pos=tIn.selectionStart,idx=seg.indexOf(s);
+      if(ster(tIn,e))return;
       if(e.key==='/'){e.preventDefault();nIn.focus();return;}
       if(e.key==='ArrowRight'&&pos===tIn.value.length){e.preventDefault();nIn.focus();nIn.setSelectionRange(0,0);return;}
+      if(e.key==='ArrowLeft'&&pos===0){if(idx>0&&seg[idx-1].type==='txt'){e.preventDefault();const p=seg[idx-1].el;p.focus();p.setSelectionRange(p.value.length,p.value.length);}return;}
       if(e.key==='Backspace'&&tIn.value===''){e.preventDefault();verwijderFrac(s,idx<seg.length-1?seg[idx+1]:null);}
       if(e.key==='Enter'){e.preventDefault();if(opts.onEnter)opts.onEnter();}
     });
     nIn.addEventListener('keydown',e=>{
       const pos=nIn.selectionStart,idx=seg.indexOf(s);
+      if(ster(nIn,e))return;
+      if(e.key==='Tab'||e.key==='Enter'){e.preventDefault();if(e.key==='Enter'&&opts.onEnter){opts.onEnter();return;}if(idx<seg.length-1){const v=seg[idx+1].el;v.focus();v.setSelectionRange(0,0);}return;}
+      if(e.key==='/'){e.preventDefault();const nF=maakFrac(''),a=maakTxt('');seg.splice(idx+1,0,nF,a);inserNa(nF.el,el);inserNa(a.el,nF.el);nF.tIn.focus();wijzigd();return;}
       if(e.key==='ArrowLeft'&&pos===0){e.preventDefault();tIn.focus();tIn.setSelectionRange(tIn.value.length,tIn.value.length);return;}
-      if(e.key==='ArrowRight'&&pos===nIn.value.length){
-        if(idx<seg.length-1&&seg[idx+1].type==='txt'){e.preventDefault();seg[idx+1].el.focus();seg[idx+1].el.setSelectionRange(0,0);}return;
-      }
+      if(e.key==='ArrowRight'&&pos===nIn.value.length){if(idx<seg.length-1&&seg[idx+1].type==='txt'){e.preventDefault();seg[idx+1].el.focus();seg[idx+1].el.setSelectionRange(0,0);}return;}
       if(e.key==='Backspace'&&nIn.value===''){e.preventDefault();tIn.focus();tIn.setSelectionRange(tIn.value.length,tIn.value.length);}
       if(e.key==='Enter'){e.preventDefault();if(opts.onEnter)opts.onEnter();}
     });
@@ -337,20 +356,15 @@ function initFracWidget(hostId,regId,opts={}){
     const vSeg=(idx>0&&seg[idx-1].type==='txt')?seg[idx-1]:null;
     const aSeg=naSeg||(idx<seg.length-1&&seg[idx+1].type==='txt'?seg[idx+1]:null);
     const curPos=vSeg?vSeg.el.value.length:0;
-    if(vSeg&&aSeg){vSeg.el.value+=aSeg.el.value;vSeg.el.style.width=bw(vSeg.el.value||'0')+'px';seg.splice(idx,2);host.removeChild(fSeg.el);host.removeChild(aSeg.el);}
+    if(vSeg&&aSeg){vSeg.el.value+=aSeg.el.value;vSeg.el.style.width=br(vSeg.el.value)+'px';seg.splice(idx,2);host.removeChild(fSeg.el);host.removeChild(aSeg.el);}
     else{seg.splice(idx,1);host.removeChild(fSeg.el);}
-    if(vSeg){vSeg.el.focus();vSeg.el.setSelectionRange(curPos,curPos);}
+    if(vSeg){vSeg.el.focus();vSeg.el.setSelectionRange(curPos,curPos);}wijzigd();
   }
-  host.addEventListener('click',e=>{
-    if(e.target===host){const l=[...seg].reverse().find(s=>s.type==='txt');if(l){l.el.focus();l.el.setSelectionRange(l.el.value.length,l.el.value.length);}}
-  });
-  function clear(){
-    while(host.firstChild)host.removeChild(host.firstChild);
-    seg.length=0;const b=maakTxt('');seg.push(b);host.appendChild(b.el);
-  }
-  function focusWidget(){const l=seg.find(s=>s.type==='txt');if(l){l.el.focus();}}
+  host.addEventListener('click',e=>{if(e.target===host){const l=[...seg].reverse().find(s=>s.type==='txt');if(l){l.el.focus();l.el.setSelectionRange(l.el.value.length,l.el.value.length);}}});
+  function clear(){while(host.firstChild)host.removeChild(host.firstChild);seg.length=0;const b=maakTxt('');seg.push(b);host.appendChild(b.el);}
+  function focusWidget(){setTimeout(()=>{const inp=host.querySelector('input');if(inp)inp.focus();},30);}
   const begin=maakTxt('');seg.push(begin);host.appendChild(begin.el);
-  _frRegs[regId]={getVal:leesWaarde,clear,focus:focusWidget};
+  _fr[regId]={getVal:leesWaarde,clear,focusWidget};
 }
 
 // ══ BREUK KLASSE ══
@@ -714,7 +728,6 @@ function genereer(reeks){
 let staat={naam:'',reeks:null,punten:0,huidig:null};
 
 // ══ LOGIN ══
-window.addEventListener('load', initWidgets);
 document.getElementById('inp-naam').addEventListener('keydown',e=>{if(e.key==='Enter')login();});
 async function login(){
   const naam=document.getElementById('inp-naam').value.trim();
@@ -760,6 +773,7 @@ function startOefening(){
   document.getElementById('oef-reeks-lbl').textContent=staat.reeks;
   document.getElementById('score-lbl').textContent=staat.punten;
   toonScherm('s-oef');
+  initWidgets();
   laadVolgende();
   startVoortgangPoll();
 }
@@ -776,12 +790,12 @@ function laadVolgende(){
   document.getElementById('verg-display').innerHTML=verg;
   document.getElementById('var-lbl').textContent=letter;
   clearFracWidget('antwoord');
+  setTimeout(()=>focusFracWidget('antwoord'), 50);
   document.getElementById('feedback').className='feedback';
   document.getElementById('feedback').textContent='';
   document.getElementById('uitwerking').style.display='none';
   document.getElementById('uitwerking-inhoud').innerHTML='';
   document.getElementById('btn-volgende').style.display='none';
-  focusFracWidget('antwoord');
 }
 
 async function controleer(){
