@@ -30,24 +30,21 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;}
 .card-titel{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.75rem;}
 
-/* ── Inputs ── */
-input[type=text]:not(.fi-txt),input[type=number]{
+/* ── Inputs (naam-veld login) ── */
+#inp-naam{
   width:100%;padding:.75rem 1rem;border:2px solid var(--border);border-radius:9px;
   font-family:'Nunito',sans-serif;font-size:1rem;color:var(--text);
   background:var(--surface2);outline:none;transition:border-color .2s;
 }
-input[type=text]:not(.fi-txt):focus,input[type=number]:focus{border-color:var(--accent);}
+#inp-naam:focus{border-color:var(--accent);}
 
-/* ── Antwoord invoerveld (host voor breuk-widget) ── */
-.antwoord-veld{
-  flex:1;min-width:0;display:inline-flex;align-items:center;flex-wrap:nowrap;
-  cursor:text;padding:.75rem 1rem;border:2px solid var(--border);border-radius:9px;
-  background:var(--surface2);font-family:'JetBrains Mono',monospace;
-  font-size:1.1rem;font-weight:700;color:var(--text);transition:border-color .2s;
-}
-.antwoord-veld:focus-within{border-color:var(--accent);}
+/* ── Antwoord invoerveld — exact zoals werkend voorbeeld ── */
+.verg-input{padding:9px 13px;border:2px solid var(--border);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700;color:var(--text);background:var(--surface2);transition:border-color .2s;outline:none;width:100%;}
+.verg-input:focus-within{border-color:var(--accent);}
+.frac-host{display:inline-flex;align-items:center;flex-wrap:nowrap;cursor:text;outline:none;}
+.frac-host:focus-within{border-color:var(--accent);}
 .fi-txt{outline:none;border:none;background:transparent;font-family:inherit;font-size:inherit;font-weight:inherit;color:inherit;padding:0;line-height:1;}
-.fi-frac{display:inline-flex;flex-direction:column;align-items:center;margin:0 2px;vertical-align:middle;}
+.fi-frac{display:inline-flex;flex-direction:column;align-items:center;margin:0 2px;}
 .fi-frac input{outline:none;border:none;background:transparent;font-family:inherit;font-size:inherit;font-weight:inherit;text-align:center;padding:0;line-height:1.35;color:inherit;}
 .fi-lijn{height:1.5px;background:currentColor;min-width:16px;}
 
@@ -68,6 +65,7 @@ input[type=text]:not(.fi-txt):focus,input[type=number]:focus{border-color:var(--
 .groep-kaart.sel-A{border-color:#ef4444;background:#fff5f5;}
 .groep-kaart.sel-B{border-color:var(--accent);background:#eff6ff;}
 .groep-kaart.sel-C{border-color:#eab308;background:#fefce8;}
+.groep-kaart.sel-D{border-color:#8b5cf6;background:#f5f3ff;}
 .groep-letter{font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700;min-width:2rem;line-height:1;}
 .groep-letter.A{color:#ef4444;}.groep-letter.B{color:var(--accent);}.groep-letter.C{color:#eab308;}
 .groep-info h3{font-size:.95rem;font-weight:700;margin-bottom:.15rem;}
@@ -159,7 +157,7 @@ input[type=text]:not(.fi-txt):focus,input[type=number]:focus{border-color:var(--
 
 <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzI2xZ1lsJmwcPpIq92fKdBkvaPQ5J62796V9kWua9F8X1gcmehC0vrRWzsnFCCZmvK/exec";
-const PUNTEN = {A:2, B:4, C:10};
+const PUNTEN = {A:1, B:2, C:4, D:10};
 </script>
 
 <!-- ══ SCHERM 1: LOGIN ══ -->
@@ -196,21 +194,28 @@ const PUNTEN = {A:2, B:4, C:10};
     <div class="groep-kaart" id="kaart-A" onclick="kiesGroep('A')">
       <div class="groep-letter A">A</div>
       <div class="groep-info">
-        <h3>Reeks A — basisvergelijkingen</h3>
-        <p>Gehele getallen, geheel resultaat. Alle drie de types.</p>
+        <h3>Reeks A — eenvoudig</h3>
+        <p>Vergelijkingen van de vorm ax = b of x + a = b.</p>
       </div>
     </div>
     <div class="groep-kaart" id="kaart-B" onclick="kiesGroep('B')">
       <div class="groep-letter B">B</div>
       <div class="groep-info">
-        <h3>Reeks B — met breuken</h3>
-        <p>Coëfficiënten of resultaat kunnen breuken zijn.</p>
+        <h3>Reeks B — termen aan beide kanten</h3>
+        <p>Vergelijkingen van de vorm ax + b = cx + d.</p>
       </div>
     </div>
     <div class="groep-kaart" id="kaart-C" onclick="kiesGroep('C')">
       <div class="groep-letter C">C</div>
       <div class="groep-info">
-        <h3>Reeks C — met haakjes</h3>
+        <h3>Reeks C — met breuken</h3>
+        <p>Coëfficiënten of resultaat kunnen breuken zijn.</p>
+      </div>
+    </div>
+    <div class="groep-kaart" id="kaart-D" onclick="kiesGroep('D')">
+      <div class="groep-letter" style="color:#8b5cf6;font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700;min-width:2rem;line-height:1;">D</div>
+      <div class="groep-info">
+        <h3>Reeks D — met haakjes</h3>
         <p>Eerst haakjes uitwerken, dan oplossen.</p>
       </div>
     </div>
@@ -248,7 +253,7 @@ const PUNTEN = {A:2, B:4, C:10};
         <i id="var-lbl">x</i> =
       </div>
       <div class="antwoord-zone">
-        <div class="antwoord-veld" id="antwoord-fw" style="min-width:0;"></div>
+        <div class="verg-input frac-host" id="antwoord-fw"></div>
         <button class="btn btn-primary" onclick="controleer()">✓</button>
       </div>
       <p class="hint">Tik / om een breukstreep in te voegen</p>
@@ -488,10 +493,9 @@ function rndNietNul(arr){return arr[rnd(0,arr.length-1)];}
 
 // ══ VERGELIJKING GENERATOREN ══
 
-// Reeks A: gehele coëfficiënten, geheel resultaat
-// Types: x+a=b, ax=b, ax+b=cx+d
+// Reeks A: x+a=b en ax=b, gehele getallen
 function genA(){
-  const types=['type1','type2','type3'];
+  const types=['type1','type2'];
   const type=rndNietNul(types);
   const letter=rndNietNul(['x','y','t','a','n']);
 
@@ -519,39 +523,37 @@ function genA(){
       +stapRij('<i>'+letter+'</i>',''+opl,'Herleid.');
     return{verg,opl:new Br(opl),letter,uitw};
   }
-  // type3: ax+b=cx+d
-  {
-    const opl=rnd(-8,8);
-    let a,c;
-    do{a=rnd(-6,6);c=rnd(-6,6);}while(a===c||a===0&&c===0);
-    const b=rndNulvrij(-10,10);
-    const d=(a-c)*opl+b; // zodat opl klopt
-    const ll=new Br(a);const lg=new Br(b);
-    const rl=new Br(c);const rg=new Br(d);
-    const nLo=ll.min(rl); // a-c
-    const nRg=rg.min(lg); // d-b
-    const lH=lidHTML(ll,lg,letter);
-    const rH=lidHTML(rl,rg,letter);
-    const stap1=stapRij(
-      lH+`<span class="markeer">${c>0?' − '+c+'<i>'+letter+'</i>':' + '+Math.abs(c)+'<i>'+letter+'</i>'}</span>`+`<span class="markeer">${b>0?' − '+b:' + '+Math.abs(b)}</span>`,
-      rH+`<span class="markeer">${c>0?' − '+c+'<i>'+letter+'</i>':' + '+Math.abs(c)+'<i>'+letter+'</i>'}</span>`+`<span class="markeer">${b>0?' − '+b:' + '+Math.abs(b)}</span>`,
-      'Werk de termen met een onbekende weg uit het ene lid. Werk de termen zonder onbekende weg uit het andere lid.'
-    );
-    const stap2=stapRij(lidHTML(nLo,new Br(0),letter),brHTML(nRg),'Herleid beide leden.');
-    const stap3=stapRij(lidHTML(nLo,new Br(0),letter)+`<span class="markeer"> : ${nLo.t}</span>`,brHTML(nRg)+`<span class="markeer"> : ${nLo.t}</span>`,'Werk de factor weg.');
-    const stap4=stapRij('<i>'+letter+'</i>',brHTML(new Br(opl)),'Herleid.');
-    const uitw=stapRij(lH,rH)+stap1+stap2+stap3+stap4;
-    return{verg:lH+' = '+rH,opl:new Br(opl),letter,uitw};
-  }
 }
 
-// Reeks B: zelfde types maar resultaat of coëfficiënt kan breuk zijn
+// Reeks B: ax+b=cx+d, gehele coëfficiënten, geheel resultaat
 function genB(){
-  const sub=rnd(1,3);
+  const letter=rndNietNul(['x','y','t','a','n']);
+  const opl=rnd(-8,8);
+  let a,c;
+  do{a=rnd(-6,6);c=rnd(-6,6);}while(a===c||a===0&&c===0);
+  const b=rndNulvrij(-10,10);
+  const d=(a-c)*opl+b;
+  const ll=new Br(a),lg=new Br(b),rl=new Br(c),rg=new Br(d);
+  const nLo=ll.min(rl),nRg=rg.min(lg);
+  const lH=lidHTML(ll,lg,letter),rH=lidHTML(rl,rg,letter);
+  const stap1=stapRij(
+    lH+`<span class="markeer">${c>0?' − '+c+'<i>'+letter+'</i>':' + '+Math.abs(c)+'<i>'+letter+'</i>'}</span>`+`<span class="markeer">${b>0?' − '+b:' + '+Math.abs(b)}</span>`,
+    rH+`<span class="markeer">${c>0?' − '+c+'<i>'+letter+'</i>':' + '+Math.abs(c)+'<i>'+letter+'</i>'}</span>`+`<span class="markeer">${b>0?' − '+b:' + '+Math.abs(b)}</span>`,
+    'Werk de termen met een onbekende weg uit het ene lid. Werk de termen zonder onbekende weg uit het andere lid.'
+  );
+  const stap2=stapRij(lidHTML(nLo,new Br(0),letter),brHTML(nRg),'Herleid beide leden.');
+  const stap3=stapRij(lidHTML(nLo,new Br(0),letter)+`<span class="markeer"> : ${nLo.t}</span>`,brHTML(nRg)+`<span class="markeer"> : ${nLo.t}</span>`,'Werk de factor weg.');
+  const stap4=stapRij('<i>'+letter+'</i>',brHTML(new Br(opl)),'Herleid.');
+  return{verg:lH+' = '+rH,opl:new Br(opl),letter,uitw:stapRij(lH,rH)+stap1+stap2+stap3+stap4};
+}
+
+// Reeks C: breuken — 80% gehele coëff met breukresultaat, 20% breuk als coëfficiënt
+function genC(){
+  const sub=Math.random()<0.8?1:2;
   const letter=rndNietNul(['x','y','t','a','n','m']);
 
   if(sub===1){
-    // ax + b = cx + d, gehele coëff maar resultaat is breuk (a-c deelt d-b niet)
+    // ax + b = cx + d, gehele coëff maar resultaat is breuk
     let a,c,b,d,opl;
     let pogingen=0;
     do{
@@ -628,8 +630,8 @@ function haakjesTerm(a,b,c,letter){
   return`${coefStr(a)}(${haakjesInhoud(b,c,letter)})`;
 }
 
-// Reeks C: haakjes, gehele coëfficiënten
-function genC(){
+// Reeks D: haakjes, gehele coëfficiënten
+function genD(){
   const sub=rnd(1,3);
   const letter=rndNietNul(['x','y','t','n']);
 
@@ -640,7 +642,7 @@ function genC(){
     const c=rndNulvrij(-8,8);
     const opl=rndNulvrij(-6,6);
     const d=a*(b*opl+c);
-    if(b===0)return genC();
+    if(b===0)return genD();
     const ab=a*b,ac=a*c;
     const lH=haakjesTerm(a,b,c,letter);
     const rH=''+d;
@@ -662,7 +664,7 @@ function genC(){
     const e=rndNulvrij(-5,5);
     const opl=rndNulvrij(-6,6);
     const ab=a*b,ac=a*c;
-    if(ab===e)return genC(); // zou nLo=0 geven
+    if(ab===e)return genD(); // zou nLo=0 geven
     const f=ab*opl+ac-e*opl; // zodat opl klopt: ab*opl+ac = e*opl+f
     const nLo=new Br(ab-e),nRg=new Br(f-ac);
     const lH=haakjesTerm(a,b,c,letter);
@@ -693,10 +695,10 @@ function genC(){
     // Bereken f zodat opl klopt: ab*opl+ac = de*opl+df  →  df = ab*opl+ac-de*opl
     const df=ab*opl+ac-de*opl;
     // f moet geheel zijn
-    if(de===0)return genC();
+    if(de===0)return genD();
     const f=df/d; // d*f = df, maar f moet integer zijn
     // Controleer of f geheel is
-    if(!Number.isInteger(f))return genC();
+    if(!Number.isInteger(f))return genD();
     const nLo=new Br(ab-de),nRg=new Br(df-ac);
     const lH=haakjesTerm(a,b,c,letter);
     const rH=haakjesTerm(d,e,f,letter);
@@ -721,7 +723,8 @@ function genC(){
 function genereer(reeks){
   if(reeks==='A')return genA();
   if(reeks==='B')return genB();
-  return genC();
+  if(reeks==='C')return genC();
+  return genD();
 }
 
 // ══ STATE ══
@@ -744,7 +747,7 @@ async function login(){
     const gData=await gRes.json();
     staat.punten=sData.punten||0;
     if(gData.groep){
-      ['A','B','C'].forEach(g=>{
+      ['A','B','C','D'].forEach(g=>{
         const k=document.getElementById('kaart-'+g);
         if(g!==gData.groep){k.style.opacity='.4';k.style.pointerEvents='none';}
       });
@@ -761,7 +764,7 @@ async function login(){
 let gekozenReeks=null;
 function kiesGroep(g){
   gekozenReeks=g;
-  ['A','B','C'].forEach(x=>document.getElementById('kaart-'+x).className='groep-kaart');
+  ['A','B','C','D'].forEach(x=>document.getElementById('kaart-'+x).className='groep-kaart');
   document.getElementById('kaart-'+g).classList.add('sel-'+g);
   document.getElementById('btn-start-lbl').textContent=g;
   document.getElementById('btn-start').style.display='block';
@@ -783,7 +786,7 @@ function wisselReeks(){toonScherm('s-groep');}
 function laadVolgende(){
   staat.huidig=genereer(staat.reeks);
   const {verg,letter}=staat.huidig;
-  const typeLabel={A:'Vergelijking oplossen · 2 punten',B:'Vergelijking met breuken · 4 punten',C:'Vergelijking met haakjes · 10 punten'};
+  const typeLabel={A:'Reeks A · 1 punt',B:'Reeks B · 2 punten',C:'Reeks C · 4 punten',D:'Reeks D · 10 punten'};
   document.getElementById('oef-type-lbl').textContent=typeLabel[staat.reeks];
   document.getElementById('verg-display').innerHTML=verg+' = ?';
   // Eigenlijk toon de vergelijking zonder = ?, al staat die in verg
