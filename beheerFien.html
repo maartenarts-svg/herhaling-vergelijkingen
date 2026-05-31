@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vergelijkingen — Beheer</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f6fa;
+    --surface: #ffffff;
+    --border: #e0e2ea;
+    --text: #1a1d27;
+    --text-dim: #6b7080;
+    --accent: #2E75B6;
+    --accent-light: #e6f1fb;
+    --green: #1D9E75;
+    --green-light: #e1f5ee;
+    --red: #E24B4A;
+    --red-light: #fcebeb;
+    --mono: 'Space Mono', monospace;
+    --body: 'Nunito', sans-serif;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--body); min-height: 100vh; padding: 1.5rem 1rem 3rem; }
+  .wrap { max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.25rem; }
+
+  h1 { font-size: 1.4rem; font-weight: 800; color: var(--accent); }
+  .sub { font-size: 0.85rem; color: var(--text-dim); margin-top: 0.2rem; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+  .card-titel { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); }
+
+  label { font-size: 0.88rem; color: var(--text-dim); display: block; margin-bottom: 5px; }
+  input[type=text], input[type=number] {
+    width: 100%; padding: 0.75rem 1rem; border: 1.5px solid var(--border);
+    border-radius: 10px; font-family: var(--body); font-size: 1rem;
+    color: var(--text); background: var(--bg); outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus { border-color: var(--accent); }
+
+  .rij { display: flex; gap: 0.75rem; align-items: flex-end; }
+  .rij > div { flex: 1; }
+
+  .btn {
+    padding: 0.8rem 1.25rem; border: none; border-radius: 10px;
+    font-family: var(--body); font-size: 0.95rem; font-weight: 700;
+    cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+    width: 100%;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-danger  { background: var(--red); color: #fff; }
+  .btn-small   { padding: 0.6rem 1rem; font-size: 0.85rem; width: auto; }
+
+  .feedback {
+    border-radius: 8px; padding: 0.6rem 0.9rem; font-size: 0.88rem;
+    font-weight: 600; display: none;
+  }
+  .feedback.ok  { background: var(--green-light); color: var(--green); display: block; }
+  .feedback.nok { background: var(--red-light);   color: var(--red);   display: block; }
+
+  .status-balk { display: flex; align-items: center; gap: 0.6rem; }
+  .status-dot  { width: 10px; height: 10px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+  .status-dot.actief { background: var(--green); }
+  .status-tekst { font-size: 0.85rem; color: var(--text-dim); }
+
+  .timer-preview {
+    font-family: var(--mono); font-size: 2rem; font-weight: 700;
+    color: var(--accent); text-align: center; padding: 0.5rem 0;
+    letter-spacing: 0.05em;
+  }
+
+  .groep-overrides { display: flex; flex-direction: column; gap: 0.5rem; }
+  .groep-rij { display: flex; gap: 0.5rem; align-items: center; }
+  .groep-rij input[type=text] { flex: 1; padding: 0.55rem 0.75rem; font-size: 0.88rem; }
+  .groep-select {
+    padding: 0.55rem 0.75rem; border: 1.5px solid var(--border); border-radius: 10px;
+    font-family: var(--body); font-size: 0.88rem; color: var(--text);
+    background: var(--bg); outline: none; cursor: pointer; width: 70px;
+  }
+  .groep-select:focus { border-color: var(--accent); }
+  .btn-verwijder { background: none; border: none; color: var(--text-dim); font-size: 1.2rem; cursor: pointer; padding: 0 4px; line-height: 1; }
+  .btn-verwijder:hover { color: var(--red); }
+  .btn-toevoeg { background: var(--accent-light); color: var(--accent); border: none; border-radius: 8px; padding: 0.5rem 0.9rem; font-family: var(--body); font-size: 0.85rem; font-weight: 700; cursor: pointer; width: auto; }
+
+  .scores-tabel { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .scores-tabel th { text-align: left; padding: 6px 8px; color: var(--text-dim); font-weight: 700; border-bottom: 1px solid var(--border); }
+  .scores-tabel td { padding: 6px 8px; border-bottom: 1px solid var(--bg); }
+  .pil { display: inline-block; padding: 1px 7px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; font-family: var(--mono); }
+  .pil-a { background: #fde8e8; color: #c0392b; }
+  .pil-b { background: #e1f5ee; color: #0f6e56; }
+  .pil-c { background: #fef9e7; color: #7d6608; }
+
+  .laden { color: var(--text-dim); font-size: 0.85rem; text-align: center; padding: 1rem 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div>
+    <h1>🧮 Vergelijkingen — Beheer</h1>
+    <p class="sub">Alleen voor de leerkracht</p>
+  </div>
+
+  <div class="card">
+    <div class="status-balk">
+      <div class="status-dot" id="status-dot"></div>
+      <span class="status-tekst" id="status-tekst">Verbinding controleren…</span>
+    </div>
+  </div>
+
+  <!-- Lesinstellingen -->
+  <div class="card">
+    <div class="card-titel">Lesinstellingen</div>
+
+    <div class="rij">
+      <div>
+        <label>Starttijd (nu)</label>
+        <input type="text" id="input-start" readonly style="color: var(--text-dim); font-family: var(--mono); font-size: 0.9rem;" />
+      </div>
+      <div>
+        <label>Duur (minuten)</label>
+        <input type="number" id="input-duur" value="35" min="1" max="90" style="width:100%;" oninput="updatePreview()" />
+      </div>
+    </div>
+
+    <div class="timer-preview" id="timer-preview">35:00</div>
+
+    <div>
+      <label>Geheime oplossing (zichtbaar bij 100%)</label>
+      <input type="text" id="input-oplossing" placeholder="bv.  x = 7" />
+    </div>
+
+    <button class="btn btn-primary" onclick="slaInstellingenOp()">Opslaan en starten</button>
+    <div class="feedback" id="fb-instellingen"></div>
+  </div>
+
+  <!-- Groep-overrides -->
+  <div class="card">
+    <div class="card-titel">Groep aanpassen per leerling</div>
+    <p style="font-size:0.82rem; color:var(--text-dim); line-height:1.5;">
+      Vul de naam exact in zoals de leerling ze ingeeft. De leerling ziet bij de volgende login de nieuwe groep.
+    </p>
+    <div class="groep-overrides" id="overrides-lijst"></div>
+    <button class="btn-toevoeg" onclick="voegOverrideToe()">+ Leerling toevoegen</button>
+    <button class="btn btn-primary btn-small" style="width:auto; margin-top:0.25rem;" onclick="slaOverridesOp()">Overrides opslaan</button>
+    <div class="feedback" id="fb-overrides"></div>
+  </div>
+
+  <!-- Live scores -->
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div class="card-titel">Live scores</div>
+      <button class="btn btn-small" style="background:var(--accent-light);color:var(--accent);border:none;border-radius:8px;font-family:var(--body);font-weight:700;cursor:pointer;" onclick="laadScores()">↻ Vernieuwen</button>
+    </div>
+    <div id="scores-container" class="laden">Laden…</div>
+  </div>
+
+</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby33J1lwpmqVQiBwl24zx05pngv9nNZwOavcBOA81FwwLzq8r9dGswYKSRGpkMCBZY/exec";
+
+// ── Init ─────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  const nu = new Date();
+  document.getElementById('input-start').value = nu.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' });
+  updatePreview();
+  checkVerbinding();
+  laadScores();
+  setInterval(laadScores, 15000);
+});
+
+function updatePreview() {
+  const min = parseInt(document.getElementById('input-duur').value) || 0;
+  document.getElementById('timer-preview').textContent =
+    String(min).padStart(2, '0') + ':00';
+}
+
+// ── Verbinding checken ───────────────────────────────────────────
+async function checkVerbinding() {
+  try {
+    const res = await fetch(`${SCRIPT_URL}?action=config`);
+    const data = await res.json();
+    document.getElementById('status-dot').classList.add('actief');
+    document.getElementById('status-tekst').textContent = 'Verbonden met Google Sheets';
+
+    // Laad bestaande instellingen
+    if (data.eindtijd) {
+      const eind = new Date(data.eindtijd);
+      const nu   = new Date();
+      const restMin = Math.max(0, Math.round((eind - nu) / 60000));
+      document.getElementById('input-duur').value = restMin || 35;
+      updatePreview();
+    }
+    if (data.oplossing) {
+      document.getElementById('input-oplossing').value = data.oplossing;
+    }
+
+    // Laad overrides
+    const overrides = Object.entries(data)
+      .filter(([k]) => k.startsWith('groep_'))
+      .map(([k, v]) => ({ naam: k.replace('groep_', '').replace(/_/g, ' '), groep: v }));
+    overrides.forEach(o => voegOverrideToe(o.naam, o.groep));
+
+  } catch(e) {
+    document.getElementById('status-tekst').textContent = 'Geen verbinding — controleer de SCRIPT_URL';
+  }
+}
+
+// ── Instellingen opslaan ─────────────────────────────────────────
+async function slaInstellingenOp() {
+  const duur = parseInt(document.getElementById('input-duur').value) || 35;
+  const oplossing = document.getElementById('input-oplossing').value.trim();
+  const eindtijd = new Date(Date.now() + duur * 60 * 1000).toISOString();
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'instellingen', eindtijd, oplossing })
+    });
+    const data = await res.json();
+    toonFeedback('fb-instellingen', data.ok, data.ok ? `Opgeslagen! Eindtijd: over ${duur} min.` : data.fout);
+  } catch(e) {
+    toonFeedback('fb-instellingen', false, 'Verbindingsfout.');
+  }
+}
+
+// ── Groep-overrides ──────────────────────────────────────────────
+function voegOverrideToe(naam = '', groep = 'B') {
+  const lijst = document.getElementById('overrides-lijst');
+  const rij = document.createElement('div');
+  rij.className = 'groep-rij';
+  rij.innerHTML = `
+    <input type="text" placeholder="Naam leerling" value="${naam}" />
+    <select class="groep-select">
+      <option ${groep==='A'?'selected':''}>A</option>
+      <option ${groep==='B'?'selected':''}>B</option>
+      <option ${groep==='C'?'selected':''}>C</option>
+    </select>
+    <button class="btn-verwijder" onclick="this.parentElement.remove()">×</button>
+  `;
+  lijst.appendChild(rij);
+}
+
+async function slaOverridesOp() {
+  const rijen = document.querySelectorAll('.groep-rij');
+  const overrides = {};
+  rijen.forEach(rij => {
+    const naam = rij.querySelector('input').value.trim();
+    const groep = rij.querySelector('select').value;
+    if (naam) overrides['groep_' + naam.toLowerCase().replace(/\s+/g, '_')] = groep;
+  });
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'instellingen', overrides })
+    });
+    const data = await res.json();
+    toonFeedback('fb-overrides', data.ok, data.ok ? 'Overrides opgeslagen!' : data.fout);
+  } catch(e) {
+    toonFeedback('fb-overrides', false, 'Verbindingsfout.');
+  }
+}
+
+// ── Live scores ──────────────────────────────────────────────────
+async function laadScores() {
+  try {
+    const res = await fetch(`${SCRIPT_URL}?action=klassikaal`);
+    const data = await res.json();
+    const leerlingen = (data.leerlingen || []).sort((a, b) => b.punten - a.punten);
+    const container = document.getElementById('scores-container');
+
+    if (leerlingen.length === 0) {
+      container.innerHTML = '<p class="laden">Nog geen leerlingen actief.</p>';
+      return;
+    }
+
+    let html = `<table class="scores-tabel">
+      <thead><tr><th>Naam</th><th>Groep</th><th>Punten</th></tr></thead><tbody>`;
+    leerlingen.forEach(l => {
+      const groepKlasse = `pil-${(l.groep || 'b').toLowerCase()}`;
+      html += `<tr>
+        <td>${l.naam}</td>
+        <td><span class="pil ${groepKlasse}">${l.groep || '?'}</span></td>
+        <td><strong>${l.punten}</strong></td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
+    container.className = '';
+  } catch(e) {
+    document.getElementById('scores-container').innerHTML = '<p class="laden">Fout bij laden.</p>';
+  }
+}
+
+// ── Hulpfuncties ─────────────────────────────────────────────────
+function toonFeedback(id, ok, tekst) {
+  const el = document.getElementById(id);
+  el.className = 'feedback ' + (ok ? 'ok' : 'nok');
+  el.textContent = ok ? '✓ ' + tekst : '✗ ' + tekst;
+  setTimeout(() => { el.className = 'feedback'; }, 4000);
+}
+</script>
+</body>
+</html>
