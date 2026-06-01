@@ -254,7 +254,7 @@ const PUNTEN = {A:1, B:2, C:4, D:10};
       </div>
       <div class="antwoord-zone">
         <div class="verg-input frac-host" id="antwoord-fw"></div>
-        <button class="btn btn-primary" onclick="controleer()">✓</button>
+        <button class="btn btn-primary" id="btn-controleer" onclick="controleer()">✓</button>
       </div>
       <p class="hint">Tik / om een breukstreep in te voegen</p>
       <div class="feedback" id="feedback"></div>
@@ -793,6 +793,7 @@ function laadVolgende(){
   document.getElementById('verg-display').innerHTML=verg;
   document.getElementById('var-lbl').textContent=letter;
   clearFracWidget('antwoord');
+  document.getElementById('btn-controleer').disabled = false;
   setTimeout(()=>focusFracWidget('antwoord'), 50);
   document.getElementById('feedback').className='feedback';
   document.getElementById('feedback').textContent='';
@@ -845,7 +846,8 @@ async function controleer(){
       })});
     }catch(e){}
   }
-  // antwoord geblokkeerd na controle
+  document.querySelectorAll('#antwoord-fw input').forEach(i => i.disabled = true);
+  document.getElementById('btn-controleer').disabled = true;
 }
 
 function volgende(){
