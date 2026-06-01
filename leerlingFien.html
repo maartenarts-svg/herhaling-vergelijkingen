@@ -805,8 +805,12 @@ function laadVolgende(){
 }
 
 async function controleer(){
+  if(document.getElementById('btn-controleer').disabled) return;
   const ing=getFracVal('antwoord').trim();
   if(!ing)return;
+  document.getElementById('antwoord-fw').style.pointerEvents = 'none';
+  document.getElementById('antwoord-fw').style.opacity = '0.5';
+  document.getElementById('btn-controleer').disabled = true;
   const {opl,letter}=staat.huidig;
   const res=controleerAntwoord(ing,opl);
   const fb=document.getElementById('feedback');
@@ -848,9 +852,6 @@ async function controleer(){
       })});
     }catch(e){}
   }
-  document.getElementById('antwoord-fw').style.pointerEvents = 'none';
-  document.getElementById('antwoord-fw').style.opacity = '0.5';
-  document.getElementById('btn-controleer').disabled = true;
 }
 
 function volgende(){
